@@ -28,7 +28,7 @@ public class Launcher {
     static final String PACK_NAME = "Derisomod";
     static final String REPO = "Rikux456/Launcher";      // usuario/repositorio de GitHub
     static final String BRANCH = "main";
-    static final String LAUNCHER_VERSION = "1.2.0";     // súbelo al publicar un launcher nuevo
+    static final String LAUNCHER_VERSION = "1.2.1";     // súbelo al publicar un launcher nuevo
     static final String RAM = "-Xmx4G";                  // memoria para el perfil de Minecraft
     // ===========================
 
@@ -286,10 +286,35 @@ public class Launcher {
         }
     }
 
+    static final String STORE_PACKAGE = "Microsoft.4297127D64EC6_8wekyb3d8bbwe";
+
+    static String legacyLauncherExe() {
+        for (String env : new String[]{"ProgramFiles(x86)", "ProgramFiles"}) {
+            String pf = System.getenv(env);
+            if (pf != null && Files.exists(Paths.get(pf, "Minecraft Launcher", "MinecraftLauncher.exe")))
+                return Paths.get(pf, "Minecraft Launcher", "MinecraftLauncher.exe").toString();
+        }
+        return null;
+    }
+
+    /** ¿Está instalado el launcher oficial (Microsoft Store/Xbox o el instalador clásico)? */
+    static boolean officialInstalled() {
+        if (Files.exists(minecraftDir().resolve("launcher_profiles.json"))) return true;
+        if (isWindows()) {
+            String local = System.getenv("LOCALAPPDATA");
+            return (local != null && Files.isDirectory(Paths.get(local, "Packages", STORE_PACKAGE))) || legacyLauncherExe() != null;
+        }
+        if (isMac()) return Files.exists(Paths.get("/Applications/Minecraft.app"));
+        return false;
+    }
+
     static void openOfficialLauncher() throws IOException {
         if (isWindows()) {
-            // Launcher de la Microsoft Store / Xbox app
-            new ProcessBuilder("explorer.exe", "shell:AppsFolder\\Microsoft.4297127D64EC6_8wekyb3d8bbwe!Minecraft").start();
+            String exe = legacyLauncherExe();
+            String local = System.getenv("LOCALAPPDATA");
+            boolean store = local != null && Files.isDirectory(Paths.get(local, "Packages", STORE_PACKAGE));
+            if (exe != null && !store) new ProcessBuilder(exe).start();
+            else new ProcessBuilder("explorer.exe", "shell:AppsFolder\\" + STORE_PACKAGE + "!Minecraft").start();
         } else if (isMac()) {
             new ProcessBuilder("open", "-a", "Minecraft").start();
         } else {
@@ -491,8 +516,11 @@ public class Launcher {
     /** Descarga el instalador oficial de NeoForge y lo ejecuta sin ventanas sobre .minecraft. */
     static void installNeoForge(String version, Progress progress) throws Exception {
         Path mc = minecraftDir();
-        if (!Files.exists(mc.resolve("launcher_profiles.json")))
-            throw new IOException("Abre una vez el launcher oficial de Minecraft (e inicia sesión) y vuelve a darle a Jugar.");
+        if (!Files.exists(mc.resolve("launcher_profiles.json"))) {
+            // Launcher oficial instalado pero nunca abierto: el instalador de NeoForge solo necesita que exista este archivo
+            Files.createDirectories(mc);
+            Files.writeString(mc.resolve("launcher_profiles.json"), "{\n  \"profiles\" : {},\n  \"settings\" : {},\n  \"version\" : 3\n}\n");
+        }
         String url = "https://maven.neoforged.net/releases/net/neoforged/neoforge/" + version + "/neoforge-" + version + "-installer.jar";
         Path jar = cacheDir().resolve("neoforge-" + version + "-installer.jar");
         progress.update("Descargando NeoForge " + version + "…", 0.05);
@@ -807,8 +835,35 @@ public class Launcher {
     }
 
     /** Primera vez: si tiene Modrinth o Prism y no hay instancia del pack, ofrece crearla. */
+    static boolean anyLauncherInstalled() { return modrinthInstalled() || prismInstalled() || officialInstalled(); }
+
+    /** PC sin ningún launcher: ofrece instalar uno y sigue solo en cuanto aparece. */
+    static void noLauncher(JFrame f) {
+        String[] opts = {"Instalar Modrinth (recomendado)", "Instalar launcher oficial", "Cancelar"};
+        int r = JOptionPane.showOptionDialog(f, "Para jugar necesitas un launcher de Minecraft y no hay ninguno en este PC.\n\n"
+                        + "Instala uno (y entra con tu cuenta de Microsoft). Cuando termine, este launcher seguirá solo.",
+                PACK_NAME, JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, opts, opts[0]);
+        if (r == 0 || r == 1) {
+            try { Desktop.getDesktop().browse(URI.create(r == 0 ? "https://modrinth.com/app" : "https://www.minecraft.net/download")); }
+            catch (Exception ignored) { }
+        }
+        status.setText("Esperando a que instales un launcher de Minecraft…");
+        if (waitTimer != null) waitTimer.stop();
+        waitTimer = new javax.swing.Timer(3000, e -> {
+            if (anyLauncherInstalled()) {
+                ((javax.swing.Timer) e.getSource()).stop();
+                setTarget(targetFromSettings(new Properties(), detectTargets()), false);
+                refreshTargetLabel();
+                firstRun(f);
+            }
+        });
+        waitTimer.start();
+        check();
+    }
+
     static void firstRun(JFrame f) {
         boolean firstTime = settings.getProperty("targetKind") == null;
+        if (firstTime && !anyLauncherInstalled()) { noLauncher(f); return; }
         boolean m = modrinthInstalled(), p = prismInstalled();
         if (!firstTime || target.kind() != Kind.OFFICIAL || (!m && !p)) { check(); return; }
         List<String> opts = new ArrayList<>();
@@ -1037,7 +1092,15 @@ public class Launcher {
             }
             case CUSTOM -> JOptionPane.showMessageDialog(null, "Modpack listo en:\n" + gameDir
                     + "\n\nAbre tu launcher y juega con la instancia que usa esa carpeta.", PACK_NAME, JOptionPane.INFORMATION_MESSAGE);
-            case OFFICIAL -> playOfficial();
+            case OFFICIAL -> {
+                if (!officialInstalled()) {
+                    if (modrinthInstalled() || prismInstalled()) {
+                        error("El launcher oficial no está instalado. Elige Modrinth o Prism en \"Instalar en\".");
+                    } else noLauncher((JFrame) SwingUtilities.getWindowAncestor(playBtn));
+                    return;
+                }
+                playOfficial();
+            }
         }
     }
 

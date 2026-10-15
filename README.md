@@ -13,7 +13,7 @@ El jugador abre el launcher, le da a **Actualizar** y después a **Jugar**.
      *Jugar* abre Modrinth y ahí le das a jugar en ese perfil.
    - **Prism Launcher**: igual, Prism pide confirmar la importación. *Jugar* arranca el juego directamente.
    - **Launcher oficial**: al darle a *Jugar* instala NeoForge solo y crea el perfil "Derisomod".
-     (Hace falta haber abierto el launcher oficial al menos una vez.)
+   - **Ninguno**: te ofrece instalar Modrinth o el launcher oficial y sigue solo cuando lo detecta.
    Puedes cambiarlo cuando quieras en **Instalar en**, debajo del título.
 3. Dale a **Actualizar** y luego a **Jugar**.
 
