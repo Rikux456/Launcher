@@ -28,7 +28,7 @@ public class Launcher {
     static final String PACK_NAME = "Derisomod";
     static final String REPO = "Rikux456/Launcher";      // usuario/repositorio de GitHub
     static final String BRANCH = "main";
-    static final String LAUNCHER_VERSION = "1.2.1";     // súbelo al publicar un launcher nuevo
+    static final String LAUNCHER_VERSION = "1.3.0";     // súbelo al publicar un launcher nuevo
     static final String RAM = "-Xmx4G";                  // memoria para el perfil de Minecraft
     // ===========================
 
@@ -435,6 +435,19 @@ public class Launcher {
         }
         if (isMac()) return tryStart("open", "-a", "Modrinth App");
         return tryStart("ModrinthApp") || tryStart("modrinth-app");
+    }
+
+    /** Modrinth App arranca un perfil con el enlace modrinth://launch/instance/<carpeta del perfil>. */
+    static boolean launchModrinth(Target t) {
+        String id = URLEncoder.encode(t.dir().getFileName().toString(), StandardCharsets.UTF_8).replace("+", "%20");
+        URI uri = URI.create("modrinth://launch/instance/" + id);
+        try {
+            if (isWindows()) { new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", uri.toString()).start(); return true; }
+            if (isMac()) return tryStart("open", uri.toString());
+            if (tryStart("xdg-open", uri.toString())) return true;
+            Desktop.getDesktop().browse(uri);
+            return true;
+        } catch (Exception e) { return false; }
     }
 
     static boolean launchPrism(String instanceId) {
@@ -1082,9 +1095,9 @@ public class Launcher {
     static void doPlay() {
         switch (target.kind()) {
             case MODRINTH -> {
-                boolean ok = openModrinth();
-                status.setText(ok ? "Abriendo Modrinth… dale a Jugar en el perfil \"" + target.name() + "\"."
-                        : "Abre Modrinth y dale a Jugar en el perfil \"" + target.name() + "\".");
+                if (launchModrinth(target)) status.setText("Iniciando " + target.name() + " en Modrinth…");
+                else if (openModrinth()) status.setText("Abriendo Modrinth… dale a Jugar en el perfil \"" + target.name() + "\".");
+                else status.setText("Abre Modrinth y dale a Jugar en el perfil \"" + target.name() + "\".");
             }
             case PRISM -> {
                 if (launchPrism(target.instanceId())) status.setText("Iniciando " + target.name() + " con Prism…");

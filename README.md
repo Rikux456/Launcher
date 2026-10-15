@@ -10,7 +10,7 @@ El jugador abre el launcher, le da a **Actualizar** y después a **Jugar**.
    - `Derisomod-Launcher.jar`: si ya tienes Java 21.
 2. La primera vez te pregunta con qué juegas y **crea la instancia solo, con NeoForge incluido**:
    - **Modrinth**: se abre Modrinth App pidiendo confirmar la instalación del perfil "Derisomod". Acéptala.
-     *Jugar* abre Modrinth y ahí le das a jugar en ese perfil.
+     *Jugar* arranca el juego directamente con ese perfil.
    - **Prism Launcher**: igual, Prism pide confirmar la importación. *Jugar* arranca el juego directamente.
    - **Launcher oficial**: al darle a *Jugar* instala NeoForge solo y crea el perfil "Derisomod".
    - **Ninguno**: te ofrece instalar Modrinth o el launcher oficial y sigue solo cuando lo detecta.
