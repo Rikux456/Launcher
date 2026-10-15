@@ -1,0 +1,36 @@
+name: Probar instalación de NeoForge
+
+# Se lanza a mano: compila el launcher como en la release y comprueba en Windows
+# que el Java incluido en el .exe es capaz de instalar NeoForge sin ventanas.
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Compilar y empaquetar
+        shell: bash
+        run: |
+          mkdir -p build/classes dist
+          javac -encoding UTF-8 -d build/classes launcher-src/Launcher.java launcher-src/test/InstallTest.java
+          printf "Main-Class: Launcher\n" > build/manifest.txt
+          jar cfm dist/Derisomod-Launcher.jar build/manifest.txt -C build/classes . -C launcher-src/resources .
+          jpackage --type app-image --name "Derisomod Launcher" --app-version 1.0.0 \
+            --input dist --main-jar Derisomod-Launcher.jar --main-class Launcher --icon launcher-src/icon.ico \
+            --add-modules java.se,jdk.crypto.ec,jdk.zipfs,jdk.unsupported,jdk.charsets,jdk.localedata \
+            --jlink-options "--strip-debug --no-man-pages --no-header-files" --dest build/app
+      - name: Instalar NeoForge con el Java del .exe
+        shell: bash
+        run: |
+          NEO=$(python -c "import json;print(json.load(open('manifest.json'))['neoforge'])")
+          "build/app/Derisomod Launcher/runtime/bin/java.exe" -cp "dist/Derisomod-Launcher.jar" InstallTest "$NEO"
+      - name: Registro del instalador
+        if: always()
+        shell: bash
+        run: tail -n 40 "$APPDATA/.derisomod-launcher-cache/neoforge-install.log" || true

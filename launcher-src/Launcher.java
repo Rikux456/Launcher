@@ -62,7 +62,7 @@ public class Launcher {
     // ---------- Modelo ----------
 
     record PackFile(String path, String sha1, long size) {}
-    record Manifest(String version, String minecraft, String commit, List<PackFile> files, List<String> mirrorDirs) {}
+    record Manifest(String version, String minecraft, String neoforge, String commit, List<PackFile> files, List<String> mirrorDirs) {}
     record Plan(Manifest manifest, List<PackFile> downloads, List<Path> deletions, long bytes) {
         boolean upToDate() { return downloads.isEmpty() && deletions.isEmpty(); }
     }
@@ -114,7 +114,8 @@ public class Launcher {
         Object md = m.get("mirrorDirs");
         if (md instanceof List<?> l) for (Object o : l) mirror.add(o.toString());
         else mirror.add("mods");
-        return new Manifest(String.valueOf(m.get("version")), String.valueOf(m.getOrDefault("minecraft", "1.21.1")), commit, files, mirror);
+        return new Manifest(String.valueOf(m.get("version")), String.valueOf(m.getOrDefault("minecraft", "1.21.1")),
+                String.valueOf(m.getOrDefault("neoforge", "21.1.262")), commit, files, mirror);
     }
 
     // ---------- Sincronización ----------
@@ -422,6 +423,99 @@ public class Launcher {
                 || tryStart("flatpak", "run", "org.prismlauncher.PrismLauncher", "--launch", instanceId);
     }
 
+    // ---------- Crear la instancia automáticamente ----------
+
+    static boolean modrinthInstalled() {
+        return Files.isDirectory(appData().resolve("ModrinthApp")) || Files.isDirectory(appData().resolve("com.modrinth.theseus"));
+    }
+
+    static boolean prismInstalled() {
+        return Files.isDirectory(appData().resolve("PrismLauncher"))
+                || Files.isDirectory(Paths.get(System.getProperty("user.home"), ".var", "app", "org.prismlauncher.PrismLauncher"));
+    }
+
+    static Path cacheDir() throws IOException {
+        Path d = defaultGameDir().resolveSibling("." + PROFILE_ID + "-cache");
+        Files.createDirectories(d);
+        return d;
+    }
+
+    /**
+     * Crea un .mrpack mínimo (formato de Modrinth) que solo dice "Minecraft X + NeoForge Y".
+     * Modrinth y Prism lo importan y crean la instancia con NeoForge ya instalado;
+     * después este launcher se encarga de los mods.
+     */
+    static Path buildMrpack(Manifest m) throws IOException {
+        Map<String, Object> deps = new LinkedHashMap<>();
+        deps.put("minecraft", m.minecraft());
+        deps.put("neoforge", m.neoforge());
+        Map<String, Object> idx = new LinkedHashMap<>();
+        idx.put("formatVersion", new Json.Num("1"));
+        idx.put("game", "minecraft");
+        idx.put("versionId", m.version());
+        idx.put("name", PACK_NAME);
+        idx.put("summary", "Instancia del modpack " + PACK_NAME + ". Los mods los instala " + PACK_NAME + " Launcher.");
+        idx.put("files", new ArrayList<>());
+        idx.put("dependencies", deps);
+        Path out = cacheDir().resolve(PACK_NAME + ".mrpack");
+        try (var zip = new java.util.zip.ZipOutputStream(Files.newOutputStream(out))) {
+            zip.putNextEntry(new java.util.zip.ZipEntry("modrinth.index.json"));
+            zip.write(Json.write(idx).getBytes(StandardCharsets.UTF_8));
+            zip.closeEntry();
+        }
+        return out;
+    }
+
+    static boolean openWithModrinth(Path mrpack) {
+        if (isWindows()) {
+            String local = System.getenv("LOCALAPPDATA"), pf = System.getenv("ProgramFiles");
+            for (String exe : new String[]{local + "\\Modrinth App\\Modrinth App.exe", local + "\\Programs\\Modrinth App\\Modrinth App.exe",
+                    pf + "\\Modrinth App\\Modrinth App.exe"})
+                if (tryStart(exe, mrpack.toString())) return true;
+        }
+        if (isMac() && tryStart("open", "-a", "Modrinth App", mrpack.toString())) return true;
+        try { Desktop.getDesktop().open(mrpack.toFile()); return true; } catch (Exception e) { return false; }
+    }
+
+    static boolean openWithPrism(Path mrpack) {
+        String p = mrpack.toString();
+        if (isWindows()) {
+            String local = System.getenv("LOCALAPPDATA"), pf = System.getenv("ProgramFiles");
+            return (local != null && tryStart(local + "\\Programs\\PrismLauncher\\prismlauncher.exe", "--import", p))
+                    || (pf != null && tryStart(pf + "\\PrismLauncher\\prismlauncher.exe", "--import", p));
+        }
+        if (isMac()) return tryStart("/Applications/Prism Launcher.app/Contents/MacOS/prismlauncher", "--import", p);
+        return tryStart("prismlauncher", "--import", p) || tryStart("flatpak", "run", "org.prismlauncher.PrismLauncher", "--import", p);
+    }
+
+    /** Descarga el instalador oficial de NeoForge y lo ejecuta sin ventanas sobre .minecraft. */
+    static void installNeoForge(String version, Progress progress) throws Exception {
+        Path mc = minecraftDir();
+        if (!Files.exists(mc.resolve("launcher_profiles.json")))
+            throw new IOException("Abre una vez el launcher oficial de Minecraft (e inicia sesión) y vuelve a darle a Jugar.");
+        String url = "https://maven.neoforged.net/releases/net/neoforged/neoforge/" + version + "/neoforge-" + version + "-installer.jar";
+        Path jar = cacheDir().resolve("neoforge-" + version + "-installer.jar");
+        progress.update("Descargando NeoForge " + version + "…", 0.05);
+        HttpRequest req = HttpRequest.newBuilder(URI.create(url)).header("User-Agent", PACK_NAME + "-Launcher").build();
+        HttpResponse<Path> r = HTTP.send(req, HttpResponse.BodyHandlers.ofFile(jar));
+        if (r.statusCode() != 200) throw new IOException("No se pudo descargar NeoForge (HTTP " + r.statusCode() + ")");
+        Path java = Paths.get(System.getProperty("java.home"), "bin", isWindows() ? "java.exe" : "java");
+        if (!Files.exists(java)) throw new IOException("No se encontró Java para ejecutar el instalador de NeoForge.");
+        progress.update("Instalando NeoForge " + version + " (puede tardar un par de minutos)…", 0.3);
+        Process proc = new ProcessBuilder(java.toString(), "-jar", jar.toString(), "--install-client", mc.toString())
+                .directory(cacheDir().toFile()).redirectErrorStream(true)
+                .redirectOutput(cacheDir().resolve("neoforge-install.log").toFile()).start();
+        double f = 0.3;
+        while (proc.isAlive()) {
+            Thread.sleep(500);
+            f = Math.min(0.95, f + 0.004);
+            progress.update("Instalando NeoForge " + version + " (puede tardar un par de minutos)…", f);
+        }
+        if (proc.exitValue() != 0 || findNeoForge("1." + version.substring(0, version.lastIndexOf('.'))) == null)
+            throw new IOException("La instalación de NeoForge falló. Mira el registro en:\n" + cacheDir().resolve("neoforge-install.log"));
+        progress.update("NeoForge instalado", 1);
+    }
+
     // ---------- Estilo ----------
 
     static final Color BG_TOP = new Color(0x0D0D1F), BG_BOTTOM = new Color(0x38384A);
@@ -709,7 +803,73 @@ public class Launcher {
         f.setMinimumSize(new Dimension(820, 460));
         f.setLocationRelativeTo(null);
         f.setVisible(true);
-        check();
+        firstRun(f);
+    }
+
+    /** Primera vez: si tiene Modrinth o Prism y no hay instancia del pack, ofrece crearla. */
+    static void firstRun(JFrame f) {
+        boolean firstTime = settings.getProperty("targetKind") == null;
+        boolean m = modrinthInstalled(), p = prismInstalled();
+        if (!firstTime || target.kind() != Kind.OFFICIAL || (!m && !p)) { check(); return; }
+        List<String> opts = new ArrayList<>();
+        if (m) opts.add("Modrinth");
+        if (p) opts.add("Prism");
+        opts.add("Launcher oficial");
+        int r = JOptionPane.showOptionDialog(f, "¿Con qué launcher juegas?\n\nSe creará la instancia de " + PACK_NAME
+                        + " con NeoForge ya instalado; no tienes que configurar nada.",
+                PACK_NAME, JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, opts.toArray(), opts.get(0));
+        String pick = r >= 0 ? opts.get(r) : "Launcher oficial";
+        if (pick.equals("Modrinth")) createInstance(Kind.MODRINTH);
+        else if (pick.equals("Prism")) createInstance(Kind.PRISM);
+        else chooseTarget(target);
+    }
+
+    static javax.swing.Timer waitTimer;
+
+    /** Genera el .mrpack, lo abre en Modrinth/Prism y espera a que aparezca la instancia nueva. */
+    static void createInstance(Kind kind) {
+        String app = kind == Kind.MODRINTH ? "Modrinth" : "Prism";
+        Set<Path> before = new HashSet<>();
+        for (Target t : detectTargets()) before.add(t.dir());
+        updateBtn.setEnabled(false);
+        playBtn.setEnabled(false);
+        status.setText("Preparando la instancia para " + app + "…");
+        new SwingWorker<Boolean, Void>() {
+            protected Boolean doInBackground() throws Exception {
+                Manifest m = currentPlan != null ? currentPlan.manifest() : fetchManifest();
+                Path pack = buildMrpack(m);
+                return kind == Kind.MODRINTH ? openWithModrinth(pack) : openWithPrism(pack);
+            }
+            protected void done() {
+                boolean ok;
+                try { ok = get(); } catch (Exception e) { ok = false; }
+                if (!ok) {
+                    error("No se pudo abrir " + app + ". Comprueba que está instalado.");
+                    check();
+                    return;
+                }
+                status.setText("Confirma la instalación en " + app + "… este launcher la detectará solo.");
+                sigil.spin(true);
+                long start = System.currentTimeMillis();
+                if (waitTimer != null) waitTimer.stop();
+                waitTimer = new javax.swing.Timer(2000, e -> {
+                    for (Target t : detectTargets()) {
+                        if (t.kind() == kind && !before.contains(t.dir())) {
+                            ((javax.swing.Timer) e.getSource()).stop();
+                            sigil.spin(false);
+                            chooseTarget(t);
+                            return;
+                        }
+                    }
+                    if (System.currentTimeMillis() - start > 15 * 60_000) {
+                        ((javax.swing.Timer) e.getSource()).stop();
+                        sigil.spin(false);
+                        status.setText("No apareció la instancia. Elígela en \"Instalar en\" cuando esté creada.");
+                    }
+                });
+                waitTimer.start();
+            }
+        }.execute();
     }
 
     static String htmlWrap(String inner) {
@@ -739,9 +899,19 @@ public class Launcher {
             it.addActionListener(e -> chooseTarget(t));
             menu.add(it);
         }
-        if (list.stream().noneMatch(t -> t.kind() == Kind.MODRINTH))
-            menu.add(disabledItem("   (Modrinth: crea un perfil NeoForge 1.21.1 y vuelve a abrir esto)"));
         menu.addSeparator();
+        if (modrinthInstalled()) {
+            JMenuItem it = new JMenuItem("＋ Crear perfil en Modrinth");
+            it.setFont(body);
+            it.addActionListener(e -> createInstance(Kind.MODRINTH));
+            menu.add(it);
+        }
+        if (prismInstalled()) {
+            JMenuItem it = new JMenuItem("＋ Crear instancia en Prism");
+            it.setFont(body);
+            it.addActionListener(e -> createInstance(Kind.PRISM));
+            menu.add(it);
+        }
         JMenuItem other = new JMenuItem("   Otra carpeta…");
         other.setFont(body);
         other.addActionListener(e -> {
@@ -764,6 +934,7 @@ public class Launcher {
     }
 
     static void chooseTarget(Target t) {
+        if (waitTimer != null && waitTimer.isRunning()) { waitTimer.stop(); sigil.spin(false); }
         setTarget(t, true);
         refreshTargetLabel();
         check();
@@ -873,13 +1044,25 @@ public class Launcher {
     static void playOfficial() {
         String res = ensureProfile(gameDir, currentPlan.manifest().minecraft());
         if ("NEOFORGE".equals(res)) {
-            int r = JOptionPane.showConfirmDialog(null,
-                    "Necesitas instalar NeoForge para Minecraft " + currentPlan.manifest().minecraft() + " (solo una vez).\n"
-                            + "Descarga el instalador, elige \"Install client\" y vuelve a darle a Jugar.\n\n¿Abrir la página de NeoForge?",
-                    PACK_NAME, JOptionPane.YES_NO_OPTION);
-            if (r == JOptionPane.YES_OPTION) {
-                try { Desktop.getDesktop().browse(URI.create("https://neoforged.net/")); } catch (Exception ignored) { }
-            }
+            String neo = currentPlan.manifest().neoforge();
+            playBtn.setEnabled(false);
+            sigil.spin(true);
+            new SwingWorker<Void, Void>() {
+                protected Void doInBackground() throws Exception {
+                    installNeoForge(neo, (text, frac) -> SwingUtilities.invokeLater(() -> { status.setText(text); bar.set(frac); }));
+                    return null;
+                }
+                protected void done() {
+                    sigil.spin(false);
+                    playBtn.setEnabled(true);
+                    try { get(); playOfficial(); }
+                    catch (Exception e) {
+                        Throwable c = e.getCause() != null ? e.getCause() : e;
+                        status.setText("No se pudo instalar NeoForge");
+                        error(c.getMessage());
+                    }
+                }
+            }.execute();
             return;
         }
         if (res != null) {

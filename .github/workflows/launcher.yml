@@ -48,7 +48,8 @@ jobs:
           VERSION="${{ steps.ver.outputs.version }}"
           jpackage --type app-image --name "Derisomod Launcher" --app-version "$VERSION" \
             --input dist --main-jar Derisomod-Launcher.jar --main-class Launcher --icon launcher-src/icon.ico \
-            --add-modules java.desktop,java.net.http --dest build/app
+            --add-modules java.se,jdk.crypto.ec,jdk.zipfs,jdk.unsupported,jdk.charsets,jdk.localedata \
+            --jlink-options "--strip-debug --no-man-pages --no-header-files" --dest build/app
           cd build/app && 7z a ../../dist/Derisomod-Launcher-Windows.zip "Derisomod Launcher"
       - name: Publicar release
         if: steps.ver.outputs.exists == 'false'

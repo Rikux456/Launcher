@@ -2,6 +2,7 @@
 import hashlib, json, os, sys
 
 ROOT = "modpack"
+NEOFORGE = "21.1.262"           # versión de NeoForge con la que se crean las instancias
 MIRROR_DIRS = ["mods"]          # carpetas que quedan idénticas a GitHub (se borra lo que sobre)
 SKIP = {".gitkeep", ".DS_Store", "Thumbs.db"}
 SKIP_EXT = (".bak", ".part")
@@ -23,6 +24,7 @@ manifest = {
     "name": "Derisomod",
     "minecraft": "1.21.1",
     "loader": "neoforge",
+    "neoforge": NEOFORGE,
     "version": version,
     "mirrorDirs": MIRROR_DIRS,
     "files": files,

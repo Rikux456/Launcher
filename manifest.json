@@ -2,6 +2,7 @@
   "name": "Derisomod",
   "minecraft": "1.21.1",
   "loader": "neoforge",
+  "neoforge": "21.1.262",
   "version": "fcdd430f",
   "mirrorDirs": [
     "mods"
