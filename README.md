@@ -34,9 +34,8 @@ Usa [GitHub Desktop](https://desktop.github.com/) o `git push`. El límite real 
 
 ### Publicar una versión nueva del launcher
 
-1. Sube `LAUNCHER_VERSION` en `launcher-src/Launcher.java`.
-2. Crea un tag (por ejemplo `v1.0.1`) desde *Releases → Draft a new release*.
-3. La Action *Compilar launcher* genera el `.exe` y el `.jar` y los adjunta a la release.
+1. Sube `LAUNCHER_VERSION` en `launcher-src/Launcher.java` (por ejemplo a `1.0.1`) y guarda.
+2. La Action *Compilar launcher* genera el `.exe` y el `.jar` y crea la release `v1.0.1` sola.
    Los launchers viejos avisarán de que hay una versión nueva.
 
 ### Cambiar el nombre o el repositorio
