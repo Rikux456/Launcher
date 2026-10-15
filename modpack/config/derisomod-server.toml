@@ -1,0 +1,1029 @@
+#Guardia: manten click derecho con un arma. Bloquea golpes de frente gastando estamina.
+#Parry: si el golpe llega justo al empezar la guardia y su dano <= tu ataque + Resistencia x resistanceFactor,
+#se anula sin gastar casi estamina. Con Epic Fight instalado se usa su guardia/parry y esto no se aplica
+#(salvo resistanceFactor, que tambien vale para el parry de Epic Fight).
+[guard]
+	enabled = true
+	#Ticks desde que levantas la guardia en los que un golpe cuenta como parry (20 ticks = 1 s). Epic Fight usa 8.
+	# Default: 6
+	# Range: 1 ~ 40
+	parryWindowTicks = 6
+	#Cuanto suma cada punto del stat Resistencia al umbral de parry (tambien con Epic Fight)
+	# Default: 1.0
+	# Range: 0.0 ~ 100.0
+	resistanceFactor = 1.0
+	#Contra hechizos el umbral de parry (ataque + Resistencia) se multiplica por esto: con 0,5 solo se devuelven
+	#hechizos de la mitad de fuerza que los golpes normales (tambien con Epic Fight)
+	# Default: 0.5
+	# Range: 0.0 ~ 10.0
+	spellParryFactor = 0.5
+	#Estamina que gasta un parry con exito
+	# Default: 0.0
+	# Range: 0.0 ~ 100.0
+	parryStaminaCost = 0.0
+	#Estamina que gasta bloquear por cada punto de dano del golpe
+	# Default: 1.0
+	# Range: 0.0 ~ 100.0
+	staminaPerDamage = 1.0
+	#Si te quedas sin estamina la guardia se rompe: recibes el golpe y no puedes guardar durante estos ticks
+	# Default: 30
+	# Range: 0 ~ 400
+	guardBreakTicks = 30
+	#Cuanto te frena ir en guardia (0,4 = 40% mas lento)
+	# Default: 0.4
+	# Range: 0.0 ~ 1.0
+	moveSlowdown = 0.4
+	#Si tambien se pueden bloquear/parry flechas y otros proyectiles
+	allowProjectiles = true
+	#Al hacerle parry, el atacante queda Aturdido (casi no se mueve ni hace dano) durante estos ticks (60 = 3 s; 0 = no)
+	#Tambien con Epic Fight.
+	# Default: 60
+	# Range: 0 ~ 400
+	staggerTicks = 60
+	#El golpe tiene que venir de delante: angulo del cono en grados (180 = como Epic Fight, 360 = desde cualquier lado)
+	# Default: 180.0
+	# Range: 1.0 ~ 360.0
+	facingAngle = 180.0
+
+#Estamina (modo propio). Con Epic Fight se usa su barra; el stat Estamina tambien la mejora.
+[stamina]
+	#Estamina que se recupera por segundo cuando no estas en guardia
+	# Default: 4.0
+	# Range: 0.0 ~ 100.0
+	regenPerSecond = 4.0
+	#Ticks que espera tras gastar estamina antes de empezar a recuperarla
+	# Default: 20
+	# Range: 0 ~ 200
+	regenDelayTicks = 20
+
+#Correr por paredes y techo: esprinta hasta llenar el impulso y choca contra una pared.
+#Te mueves hacia donde miras; saltar te suelta. Gasta estamina (la de Epic Fight si esta instalado).
+[surface]
+	enabled = true
+	#Segundos esprintando para llenar el impulso (Velocidad lo reduce un 0,8% por punto, hasta un 60%)
+	# Default: 2.0
+	# Range: 0.2 ~ 20.0
+	chargeSeconds = 2.0
+	#Estamina por segundo mientras corres por una pared o el techo
+	# Default: 3.0
+	# Range: 0.0 ~ 100.0
+	staminaPerSecond = 3.0
+	#Estamina minima para poder engancharte
+	# Default: 2.0
+	# Range: 0.0 ~ 100.0
+	minStaminaToStart = 2.0
+	#Velocidad base por la superficie en bloques/tick (0,3 = 6 bloques/s). El bonus de sprint de Velocidad se suma
+	# Default: 0.3
+	# Range: 0.05 ~ 2.0
+	speed = 0.3
+	#Fuerza del salto para soltarte de la pared (hacia fuera)
+	# Default: 0.75
+	# Range: 0.0 ~ 5.0
+	wallJumpOut = 0.75
+	#Cuanto del salto va en la direccion en la que corrias
+	# Default: 0.4
+	# Range: 0.0 ~ 5.0
+	wallJumpAlong = 0.4
+	#Puntos invertidos en Velocidad necesarios para poder correr por paredes (10 = Velocidad 20).
+	#Sin ellos el impulso no se carga.
+	# Default: 10
+	# Range: 0 ~ 89
+	minSpeedPoints = 10
+	#Puntos en Velocidad necesarios para pasar de la pared al techo (20 = Velocidad 30)
+	# Default: 20
+	# Range: 0 ~ 89
+	minCeilingSpeedPoints = 20
+
+#Aviso tipo Sekiro antes de que un mob te golpee (para calcular el parry).
+#Funciona con mobs que usan la IA vanilla de cuerpo a cuerpo (zombis, aranas...) y arcos (esqueletos).
+[warning]
+	#Mandar el aviso a los jugadores
+	enabled = true
+	#Ticks de antelacion del aviso (20 = 1 s). Si el mob llega ya con el ataque cargado, avisa al acercarse.
+	# Default: 8
+	# Range: 2 ~ 20
+	warnTicks = 8
+	#Antelacion minima garantizada (ticks). Si un mob iba a pegar sin haber avisado (golpes muy
+	#seguidos, llega corriendo...), avisa y retrasa el golpe este tiempo. 0 = no retrasar nunca.
+	# Default: 6
+	# Range: 0 ~ 20
+	minLeadTicks = 6
+
+#La Zona (tecla P): ralentiza todo lo que hay a tu alrededor. No gasta mana ni estamina:
+#tiene una barra de duracion que se gasta mientras esta activa y se recarga sola.
+#Nivel 1: todo lo de dentro va lento, tu tambien. Nivel 2: todo menos tu.
+[zone]
+	enabled = true
+	#Nivel general necesario para aprender La Zona en el arbol de habilidades
+	# Default: 35
+	# Range: 1 ~ 250
+	unlockLevel = 35
+	#Puntos de habilidad que cuesta aprender La Zona
+	# Default: 10
+	# Range: 0 ~ 250
+	unlockCost = 10
+	#Nivel general para La Zona mejorada (tu vas a velocidad normal)
+	# Default: 50
+	# Range: 1 ~ 250
+	upgradeLevel = 50
+	#Radio de la zona en bloques (se mueve contigo)
+	# Default: 12.0
+	# Range: 2.0 ~ 48.0
+	radius = 12.0
+	#Nivel 1: velocidad de lo que esta dentro (0,2 = va al 20%)
+	# Default: 0.2
+	# Range: 0.01 ~ 0.95
+	slowFactor = 0.2
+	#Nivel 1: velocidad del propio jugador que la activa (un poco menos lento que el resto)
+	# Default: 0.3
+	# Range: 0.01 ~ 1.0
+	ownerSlowFactor = 0.3
+	#Nivel 2: velocidad de lo que esta dentro (0,05 = casi tiempo parado)
+	# Default: 0.05
+	# Range: 0.01 ~ 0.95
+	slowFactorImproved = 0.05
+	#Nivel 1: velocidad de los OTROS jugadores dentro de tu zona (0,5 = la mitad: un poco lentos)
+	# Default: 0.5
+	# Range: 0.01 ~ 1.0
+	playerSlowFactor = 0.5
+	#Nivel 2: velocidad de los OTROS jugadores dentro de tu zona (0,06 = casi parados)
+	# Default: 0.06
+	# Range: 0.01 ~ 1.0
+	playerSlowFactorImproved = 0.06
+	#Segundos que dura con la barra llena
+	# Default: 6.0
+	# Range: 0.5 ~ 120.0
+	durationSeconds = 6.0
+	#Segundos que tarda la barra en llenarse desde vacia
+	# Default: 20.0
+	# Range: 0.5 ~ 600.0
+	rechargeSeconds = 20.0
+	#Recarga con La Zona mejorada (un poco menos)
+	# Default: 15.0
+	# Range: 0.5 ~ 600.0
+	rechargeSecondsImproved = 15.0
+	#Dentro de una zona todos tus golpes son criticos: multiplicador en nivel 1 (vanilla = 1,5)
+	# Default: 1.5
+	# Range: 1.0 ~ 10.0
+	critMultiplier = 1.5
+	#Multiplicador del critico en nivel 2
+	# Default: 2.0
+	# Range: 1.0 ~ 10.0
+	critMultiplierImproved = 2.0
+	#Knockback de cada critico dado en la zona. Se acumula y sale todo junto cuando el
+	#golpeado vuelve a moverse a velocidad normal (nivel 1 / nivel 2)
+	# Default: 0.25
+	# Range: 0.0 ~ 5.0
+	critImpact = 0.25
+	# Default: 0.4
+	# Range: 0.0 ~ 5.0
+	critImpactImproved = 0.4
+	#Ventana de parry multiplicada dentro de una zona (nivel 1 / nivel 2)
+	# Default: 2.0
+	# Range: 1.0 ~ 20.0
+	parryWindowMultiplier = 2.0
+	# Default: 4.0
+	# Range: 1.0 ~ 20.0
+	parryWindowMultiplierImproved = 4.0
+	#Golpe maximo que se puede parar (ataque + Resistencia) multiplicado dentro de una zona (nivel 1 / nivel 2)
+	# Default: 1.5
+	# Range: 1.0 ~ 20.0
+	parryThresholdMultiplier = 1.5
+	# Default: 3.0
+	# Range: 1.0 ~ 20.0
+	parryThresholdMultiplierImproved = 3.0
+
+	#La Zona por instinto: se puede activar sola con poca vida y un mob hostil cerca.
+	#Antes de aprenderla: nivel 1, dura menos y no se puede cortar. Tras activarse sola unas veces aparece
+	#en el arbol de habilidades. Ya aprendida: se activa con la barra llena.
+	[zone.instinct]
+		#Probabilidad en cada comprobacion (0,07 = 7%)
+		# Default: 0.07
+		# Range: 0.0 ~ 1.0
+		activationChance = 0.07
+		#Segundos entre comprobaciones
+		# Default: 5
+		# Range: 1 ~ 600
+		checkSeconds = 5
+		#Vida maxima para que pueda saltar (3 = corazon y medio)
+		# Default: 3.0
+		# Range: 0.5 ~ 1000.0
+		maxHealth = 3.0
+		#Radio en bloques en el que tiene que haber un mob hostil
+		# Default: 15.0
+		# Range: 1.0 ~ 64.0
+		hostileRadius = 15.0
+		#Segundos que dura cuando salta sola antes de aprenderla
+		# Default: 5.0
+		# Range: 0.5 ~ 60.0
+		durationSeconds = 5.0
+		#Veces que tiene que saltar sola para que aparezca en el arbol de habilidades
+		# Default: 4
+		# Range: 1 ~ 100
+		timesToReveal = 4
+
+#Auto-esquivar (siempre activo, antes que la guardia): probabilidad segun Velocidad y Estamina
+#y el dano del golpe; mucho mayor dentro de La Zona.
+[dodge]
+	enabled = true
+	#% de esquivar por punto de Velocidad
+	# Default: 0.6
+	# Range: 0.0 ~ 5.0
+	chancePerSpeedPoint = 0.6
+	#% de esquivar por punto de Estamina
+	# Default: 0.3
+	# Range: 0.0 ~ 5.0
+	chancePerStaminaPoint = 0.3
+	#Probabilidad maxima fuera de La Zona (0,85 = 85%)
+	# Default: 0.85
+	# Range: 0.0 ~ 1.0
+	chanceCap = 0.85
+	#Multiplicador dentro de La Zona nivel 1
+	# Default: 1.6
+	# Range: 1.0 ~ 20.0
+	zoneChanceMultiplier = 1.6
+	#Probabilidad maxima dentro de La Zona nivel 1 (en nivel 2 el tope es 100%)
+	# Default: 0.95
+	# Range: 0.0 ~ 1.0
+	zoneChanceCap = 0.95
+	#Multiplicador dentro de La Zona nivel 2
+	# Default: 3.0
+	# Range: 1.0 ~ 20.0
+	zoneChanceMultiplierImproved = 3.0
+	#Estamina que gasta cada esquiva
+	# Default: 3.0
+	# Range: 0.0 ~ 100.0
+	staminaCost = 3.0
+
+#Hechizos (tecla G lanza el elegido en la rueda; manten C para la rueda). Gastan mana.
+#El dano se multiplica por la proficiencia del elemento: de proficiencyMinMultiplier (0 %) a proficiencyMaxMultiplier (100 %).
+#Con 50 % (el elemento de origen) el multiplicador es la media de los dos.
+[spells]
+	#Mana que se recupera por segundo, en % del mana maximo (5 = se llena en 20 s)
+	# Default: 5.0
+	# Range: 0.0 ~ 100.0
+	manaRegenPercentPerSecond = 5.0
+	#Ticks que espera tras lanzar un hechizo antes de recuperar mana
+	# Default: 20
+	# Range: 0 ~ 400
+	manaRegenDelayTicks = 20
+	#Ticks entre un hechizo y el siguiente
+	# Default: 10
+	# Range: 0 ~ 400
+	castCooldownTicks = 10
+	#Multiplicador de dano con 0 % de proficiencia
+	# Default: 0.5
+	# Range: 0.0 ~ 10.0
+	proficiencyMinMultiplier = 0.5
+	#Multiplicador de dano con 100 % de proficiencia
+	# Default: 1.5
+	# Range: 0.0 ~ 10.0
+	proficiencyMaxMultiplier = 1.5
+	#Si las explosiones de los hechizos rompen bloques
+	breakBlocks = false
+	#Proficiencia (%) que necesitas en un elemento para tener la inspiracion y poder combinarlo
+	#con una habilidad (p. ej. Fulgur con Bola de fuego)
+	# Default: 30
+	# Range: 0 ~ 100
+	combineProficiency = 30
+
+	#Carga y sobrecarga: con el hechizo en la mano, manten click derecho. Si sueltas antes de chargeTicks no sale
+	#nada (ni gasta mana). Con la carga completa, tras overchargeDelayTicks empieza la sobrecarga, que tarda
+	#overchargeTicks en llenarse: si sueltas antes de que se llene sale normal; despues, sobrecargado.
+	[spells.charge]
+		#Ticks de carga para poder lanzar (20 = 1 s)
+		# Default: 12
+		# Range: 0 ~ 400
+		chargeTicks = 12
+		#Ticks que hay que seguir manteniendo con la carga completa antes de que empiece la sobrecarga
+		# Default: 40
+		# Range: 0 ~ 1200
+		overchargeDelayTicks = 40
+		#Ticks que tarda en llenarse la sobrecarga (despues de la espera)
+		# Default: 60
+		# Range: 1 ~ 1200
+		overchargeTicks = 60
+		#Cuanto te frena cargar un hechizo (0,5 = 50% mas lento)
+		# Default: 0.5
+		# Range: 0.0 ~ 1.0
+		moveSlowdown = 0.5
+
+	[spells.fireball]
+		#Mana que gasta la Bola de fuego
+		# Default: 6
+		# Range: 0 ~ 1000
+		manaCost = 6
+		#Dano de la explosion en el centro (en medios corazones), antes del multiplicador de proficiencia de Ignis
+		# Default: 8.0
+		# Range: 0.0 ~ 1000.0
+		damage = 8.0
+		#Radio de la explosion (bloques). El dano baja hasta 2/3 en el borde
+		# Default: 3.0
+		# Range: 0.5 ~ 16.0
+		radius = 3.0
+		#Velocidad (bloques por tick; 1,1 = 22 bloques por segundo)
+		# Default: 1.1
+		# Range: 0.1 ~ 5.0
+		speed = 1.1
+		#Ticks que vuela antes de explotar sola en el aire
+		# Default: 60
+		# Range: 5 ~ 400
+		lifeTicks = 60
+		#Segundos que arden los alcanzados
+		# Default: 3
+		# Range: 0 ~ 60
+		fireSeconds = 3
+		#Sobrecargada (cupula de fuego): mana que gasta
+		# Default: 15
+		# Range: 0 ~ 1000
+		overManaCost = 15
+		#Sobrecargada: dano en el centro (2/3 en el borde), antes del multiplicador de proficiencia
+		# Default: 20.0
+		# Range: 0.0 ~ 1000.0
+		overDamage = 20.0
+		#Sobrecargada: radio de la cupula (bloques)
+		# Default: 5.0
+		# Range: 0.5 ~ 32.0
+		overRadius = 5.0
+		#Sobrecargada: rompe bloques como una explosion
+		overBreakBlocks = true
+		#Sobrecargada: ticks que la cupula de fuego admite combos (Tajo de viento -> torbellino de fuego; Luz -> cruz de llamas doradas; Terra -> erupcion de magma...); la cupula se ve mientras tanto
+		# Default: 90
+		# Range: 0 ~ 400
+		domeComboTicks = 90
+		#Sobrecargada: fuerza de la explosion para romper bloques (creeper = 3, TNT = 4)
+		# Default: 3.0
+		# Range: 0.0 ~ 20.0
+		overBlockPower = 3.0
+
+	[spells.fireball_lightning]
+		#Mana que gasta la Bola de fuego electrificada
+		# Default: 10
+		# Range: 0 ~ 1000
+		manaCost = 10
+		#Dano del rayo que salta a cada enemigo cercano, antes del multiplicador de proficiencia de Fulgur
+		#(la explosion hace el mismo dano que la Bola de fuego)
+		# Default: 5.0
+		# Range: 0.0 ~ 1000.0
+		chainDamage = 5.0
+		#Distancia maxima a la que salta el rayo (bloques)
+		# Default: 6.0
+		# Range: 1.0 ~ 32.0
+		chainRange = 6.0
+		#A cuantos enemigos salta como mucho
+		# Default: 3
+		# Range: 0 ~ 16
+		chainTargets = 3
+		#Sobrecargada: mana que gasta la electrificada
+		# Default: 22
+		# Range: 0 ~ 1000
+		overManaCost = 22
+		#Sobrecargada: dano del rayo a cada enemigo
+		# Default: 10.0
+		# Range: 0.0 ~ 1000.0
+		overChainDamage = 10.0
+		#Sobrecargada: a cuantos enemigos salta el rayo
+		# Default: 5
+		# Range: 0 ~ 32
+		overChainTargets = 5
+		#Ticks que quedan aturdidos (muy lentos) los alcanzados por el rayo
+		# Default: 20
+		# Range: 0 ~ 200
+		stunTicks = 20
+
+	[spells.fireball_wind]
+		#Mana que gasta la Bola de fuego + Ventus (la explosion hace el mismo dano que la Bola de fuego)
+		# Default: 8
+		# Range: 0 ~ 1000
+		manaCost = 8
+		#Radio de la rafaga que aleja a los enemigos al explotar (bloques)
+		# Default: 6.0
+		# Range: 0.0 ~ 32.0
+		gustRadius = 6.0
+		#Fuerza del empujon de la rafaga (en el centro; la mitad en el borde)
+		# Default: 1.6
+		# Range: 0.0 ~ 10.0
+		gustStrength = 1.6
+		#Sobrecargada (torbellino de fuego): mana que gasta
+		# Default: 18
+		# Range: 0 ~ 1000
+		overManaCost = 18
+		#Torbellino: dano cada medio segundo a los atrapados, antes del multiplicador de proficiencia de Ventus
+		# Default: 3.0
+		# Range: 0.0 ~ 1000.0
+		tornadoDamage = 3.0
+		#Torbellino: radio en el que atrapa (bloques)
+		# Default: 5.0
+		# Range: 0.5 ~ 32.0
+		tornadoRadius = 5.0
+		#Torbellino: ticks que dura (al acabar suelta a los atrapados lanzandolos hacia fuera). Tambien es lo que dura el tornado de viento al prenderlo con una Bola de fuego
+		# Default: 120
+		# Range: 10 ~ 600
+		tornadoTicks = 120
+		#Torbellino: fuerza con la que atrae y levanta
+		# Default: 0.22
+		# Range: 0.0 ~ 2.0
+		tornadoPull = 0.22
+
+	[spells.fireball_earth]
+		#Mana que gasta la Bola de fuego + Terra (la explosion hace el mismo dano que la Bola de fuego)
+		# Default: 8
+		# Range: 0 ~ 1000
+		manaCost = 8
+		#Charco de lava: dano cada medio segundo a quien lo pisa, antes del multiplicador de proficiencia de Terra
+		#(solo es el efecto: no pone bloques de lava)
+		# Default: 2.0
+		# Range: 0.0 ~ 1000.0
+		poolDamage = 2.0
+		#Ticks que dura el charco de lava
+		# Default: 80
+		# Range: 0 ~ 600
+		poolTicks = 80
+		#Sobrecargada (erupcion de magma): mana que gasta. Rompe bloques como la cupula (fireball.overBreakBlocks)
+		# Default: 18
+		# Range: 0 ~ 1000
+		overManaCost = 18
+		#Sobrecargada: dano de los pinchos de roca a quien esta en la zona, antes del multiplicador de Terra
+		# Default: 6.0
+		# Range: 0.0 ~ 1000.0
+		spikeDamage = 6.0
+		#Sobrecargada: fuerza con la que los pinchos lanzan hacia arriba
+		# Default: 0.9
+		# Range: 0.0 ~ 5.0
+		spikeLaunch = 0.9
+		#Sobrecargada: ticks que dura el charco de lava grande
+		# Default: 120
+		# Range: 0 ~ 600
+		overPoolTicks = 120
+
+	[spells.fireball_light]
+		#Mana que gasta la Bola de fuego + Luminis (sale una bola guiada por cada enemigo marcado; sin marcas no se lanza)
+		# Default: 8
+		# Range: 0 ~ 1000
+		manaCost = 8
+		#Enemigos que se pueden marcar como mucho mientras cargas (mirandolos)
+		# Default: 3
+		# Range: 1 ~ 16
+		maxTargets = 3
+		#Distancia a la que se marca a un enemigo al mirarlo mientras cargas (bloques)
+		# Default: 32.0
+		# Range: 4.0 ~ 128.0
+		targetRange = 32.0
+		#Cuanto gira la bola hacia su objetivo cada tick (0 = nada, 1 = de golpe)
+		# Default: 0.25
+		# Range: 0.0 ~ 1.0
+		homing = 0.25
+		#Multiplicador de dano de la luz contra muertos vivientes (zombis, esqueletos...)
+		# Default: 1.5
+		# Range: 1.0 ~ 10.0
+		undeadMultiplier = 1.5
+		#Sobrecargada (cruz de llamas doradas, cae donde apuntas, no necesita marcas): mana que gasta. No rompe bloques
+		# Default: 18
+		# Range: 0 ~ 1000
+		overManaCost = 18
+		#Cruz: radio del circulo (bloques)
+		# Default: 5.5
+		# Range: 0.5 ~ 32.0
+		crossRadius = 5.5
+		#Cruz: dano cada medio segundo a los del circulo, antes del multiplicador de proficiencia de Luminis
+		# Default: 3.0
+		# Range: 0.0 ~ 1000.0
+		crossDamage = 3.0
+		#Cruz: ticks que quema a los del circulo
+		# Default: 60
+		# Range: 0 ~ 400
+		crossTicks = 60
+
+	[spells.fireball_water]
+		#Mana que gasta la Bola de fuego + Aqua (la explosion hace el mismo dano que la Bola de fuego, quema y ciega)
+		# Default: 8
+		# Range: 0 ~ 1000
+		manaCost = 8
+		#Segundos de ceguera a los alcanzados por la explosion de vapor
+		# Default: 3
+		# Range: 0 ~ 60
+		blindSeconds = 3
+		#Sobrecargada (columna de energia y vapor): mana que gasta. Rompe bloques como la cupula (fireball.overBreakBlocks)
+		# Default: 18
+		# Range: 0 ~ 1000
+		overManaCost = 18
+		#Sobrecargada: radio de la onda expansiva, que empuja hacia fuera y ciega (bloques)
+		# Default: 12.0
+		# Range: 0.0 ~ 48.0
+		waveRadius = 12.0
+		#Sobrecargada: fuerza del empujon de la onda (en el centro; la mitad en el borde)
+		# Default: 1.4
+		# Range: 0.0 ~ 10.0
+		waveStrength = 1.4
+		#Sobrecargada: segundos de ceguera de la onda
+		# Default: 5
+		# Range: 0 ~ 60
+		overBlindSeconds = 5
+
+	[spells.fireball_dark]
+		#Mana que gasta la Bola de fuego + Obscuritas (la explosion hace el mismo dano que la Bola de fuego y aplica llamas negras)
+		# Default: 8
+		# Range: 0 ~ 1000
+		manaCost = 8
+		#Llamas negras: segundos que duran (no se apagan con agua y mientras duran no se puede curar)
+		# Default: 5
+		# Range: 1 ~ 120
+		blackFlameSeconds = 5
+		#Llamas negras: dano por segundo (x1 / x1,5 / x2 segun la proficiencia en Obscuritas del lanzador)
+		# Default: 1.0
+		# Range: 0.0 ~ 100.0
+		blackFlameDamage = 1.0
+		#Sobrecargada (fauces): mana que gasta. El mordisco hace el dano de sobrecarga; no rompe bloques
+		# Default: 18
+		# Range: 0 ~ 1000
+		overManaCost = 18
+		#Sobrecargada: radio de la onda de llamas negras que sale del mordisco (bloques)
+		# Default: 5.0
+		# Range: 0.0 ~ 32.0
+		biteRadius = 5.0
+
+	[spells.fireball_ether]
+		#Mana que gasta la Bola de fuego + Ether (llama del eter)
+		# Default: 10
+		# Range: 0 ~ 1000
+		manaCost = 10
+		#Dano del golpe (x la proficiencia en Ignis). Si mata al objetivo, este se desintegra como un papel que arde
+		# Default: 24.0
+		# Range: 0.0 ~ 10000.0
+		damage = 24.0
+		#Sobrecargada (zona que lo borra todo): mana que gasta
+		# Default: 40
+		# Range: 0 ~ 1000
+		overManaCost = 40
+		#Sobrecargada: radio de la zona que se borra (bloques)
+		# Default: 18.0
+		# Range: 2.0 ~ 32.0
+		areaRadius = 18.0
+		#Sobrecargada: segundos que tarda el frente en llegar al borde de la zona
+		# Default: 3.2
+		# Range: 0.5 ~ 20.0
+		areaSeconds = 3.2
+		#Sobrecargada: dano a cada ser vivo que alcanza el frente (x la proficiencia en Ether). No toca a tus aliados
+		# Default: 1000.0
+		# Range: 0.0 ~ 100000.0
+		areaDamage = 1000.0
+		#Sobrecargada: borra los bloques de la zona (sin soltar nada; nunca los irrompibles como la bedrock)
+		areaBreaksBlocks = true
+		#Sobrecargada: borra tambien lo que no es un ser vivo (objetos sueltos, flechas, vagonetas, cuadros...)
+		areaErasesEntities = true
+
+	[spells.liquid_blade]
+		#Mana que gasta sacar la Espada de liquido (Obscuritas). Quitarla (volver a lanzarla) no gasta
+		# Default: 15
+		# Range: 0 ~ 1000
+		manaCost = 15
+		#Dano de cada golpe de la hoja (7 = espada de diamante). Sustituye al arma que lleves
+		# Default: 7.0
+		# Range: 0.0 ~ 10000.0
+		damage = 7.0
+		#Multiplicador de dano del tercer golpe del combo (el tajo desde arriba)
+		# Default: 1.2
+		# Range: 0.0 ~ 100.0
+		finisherMultiplier = 1.2
+		#Alcance de la hoja (bloques; con la mano son 3)
+		# Default: 4.5
+		# Range: 1.0 ~ 16.0
+		reach = 4.5
+		#Ticks minimos entre golpes de la hoja
+		# Default: 6
+		# Range: 0 ~ 100
+		hitTicks = 6
+		#Sobrecargada (tentaculo que empala): mana que gasta
+		# Default: 35
+		# Range: 0 ~ 1000
+		overManaCost = 35
+		#Sobrecargada: alcance del tentaculo; busca solo al enemigo que tengas mas a la vista (bloques)
+		# Default: 16.0
+		# Range: 2.0 ~ 64.0
+		tentacleRange = 16.0
+		#Sobrecargada: angulo maximo (grados) entre donde miras y el enemigo para que el tentaculo vaya a por el
+		# Default: 40.0
+		# Range: 1.0 ~ 180.0
+		tentacleAngle = 40.0
+		#Sobrecargada: dano al empalar (x la proficiencia en Obscuritas)
+		# Default: 14.0
+		# Range: 0.0 ~ 10000.0
+		tentacleDamage = 14.0
+		#Sobrecargada: dano al estamparlo contra el suelo si sigue vivo (x la proficiencia en Obscuritas)
+		# Default: 6.0
+		# Range: 0.0 ~ 10000.0
+		slamDamage = 6.0
+		#Sobrecargada: cuanto lo levanta por los aires empalado (bloques)
+		# Default: 1.6
+		# Range: 0.0 ~ 10.0
+		liftHeight = 1.6
+		#Sobrecargada: si el empalarlo lo mata, ticks que se queda empalado en el aire antes de morir
+		# Default: 50
+		# Range: 0 ~ 600
+		doomTicks = 50
+		#Sobrecargada: click izquierdo con el enemigo empalado lo lanza por los aires hacia donde miras; con que fuerza
+		# Default: 1.8
+		# Range: 0.0 ~ 6.0
+		throwSpeed = 1.8
+		#Sobrecargada: impulso hacia arriba extra al lanzarlo
+		# Default: 0.6
+		# Range: 0.0 ~ 4.0
+		throwUp = 0.6
+		#Sobrecargada: el lanzado recibe este multiplicador del dano de caida al aterrizar (0,5 = la mitad)
+		# Default: 0.5
+		# Range: 0.0 ~ 1.0
+		throwFallDamage = 0.5
+		#Sobrecargada: ticks que lo puedes llevar empalado (va hacia donde miras; al chocar contra el suelo se estampa) antes de que lo estampe solo
+		# Default: 100
+		# Range: 1 ~ 1200
+		holdTicks = 100
+		#Sobrecargada: dano extra al estamparlo por cada bloque de altura a la que lo tenias
+		# Default: 1.0
+		# Range: 0.0 ~ 100.0
+		slamDamagePerBlock = 1.0
+
+	[spells.transmute]
+		#Mana que gasta Transmutar (Ether): levanta el bloque al que miras y lo convierte en el objeto que elijas
+		# Default: 6
+		# Range: 0 ~ 1000
+		manaCost = 6
+		#Distancia maxima al bloque que se transmuta (bloques)
+		# Default: 6.0
+		# Range: 1.0 ~ 32.0
+		range = 6.0
+		#Ticks que dura la animacion (el objeto llega a la mano al final)
+		# Default: 44
+		# Range: 1 ~ 200
+		animTicks = 44
+		#Sobrecargada (sin mirar a un bloque cercano): mana que gasta la lluvia de espadas de luz
+		# Default: 30
+		# Range: 0 ~ 1000
+		overManaCost = 30
+		#Sobrecargada: cuantos bloques de alrededor se levantan y se convierten en espadas de luz
+		# Default: 12
+		# Range: 1 ~ 48
+		swords = 12
+		#Sobrecargada: dano de cada espada (x la proficiencia en Ether)
+		# Default: 5.0
+		# Range: 0.0 ~ 10000.0
+		swordDamage = 5.0
+		#Sobrecargada: radio del anillo de bloques que se levantan a tu alrededor
+		# Default: 4.0
+		# Range: 1.5 ~ 16.0
+		areaRadius = 4.0
+		#Sobrecargada: alcance; las espadas van a por el enemigo que tengas mas a la vista (si no hay, a donde miras)
+		# Default: 24.0
+		# Range: 2.0 ~ 96.0
+		targetRange = 24.0
+		#Los bloques transmutados desaparecen del mundo (si es false, se quedan y solo se crea el objeto)
+		consumesBlocks = true
+
+	[spells.volt_ball]
+		#Mana que gasta la Bola de rayo (Fulgur)
+		# Default: 8
+		# Range: 0 ~ 1000
+		manaCost = 8
+		#Dano de la bola al chocar (x la proficiencia en Fulgur). Sin fuego
+		# Default: 6.0
+		# Range: 0.0 ~ 10000.0
+		damage = 6.0
+		#Dano del rayo que salta a los enemigos cercanos al chocar (x la proficiencia en Fulgur). Cuantos y a que distancia: los de fireball_lightning (chainTargets, chainRange)
+		# Default: 4.0
+		# Range: 0.0 ~ 10000.0
+		chainDamage = 4.0
+		#Sobrecargada (la bola sube al cielo, se oscurece el area y cae un gran rayo): mana que gasta
+		# Default: 40
+		# Range: 0 ~ 1000
+		overManaCost = 40
+		#Sobrecargada: dano del gran rayo en el centro (x la proficiencia en Fulgur; baja hasta la mitad en el borde)
+		# Default: 28.0
+		# Range: 0.0 ~ 100000.0
+		strikeDamage = 28.0
+		#Sobrecargada: radio del impacto del gran rayo (bloques)
+		# Default: 3.5
+		# Range: 0.5 ~ 32.0
+		strikeRadius = 3.5
+		#Sobrecargada: alcance; el rayo cae sobre el enemigo que tengas mas a la vista (si no hay, donde miras)
+		# Default: 32.0
+		# Range: 2.0 ~ 128.0
+		targetRange = 32.0
+		#Sobrecargada: ticks que quedan paralizados (lentitud fuerte) los alcanzados por el gran rayo
+		# Default: 40
+		# Range: 0 ~ 600
+		strikeStunTicks = 40
+		#Sobrecargada: el gran rayo prende fuego a los alcanzados (como un rayo de verdad)
+		strikeSetsFire = false
+
+	[spells.wind_slash]
+		#Mana que gasta el Tajo de viento (Ventus)
+		# Default: 6
+		# Range: 0 ~ 1000
+		manaCost = 6
+		#Dano del tajo al enemigo que corta, antes del multiplicador de proficiencia de Ventus
+		# Default: 6.0
+		# Range: 0.0 ~ 1000.0
+		damage = 6.0
+		#Ticks de espera tras lanzar el tajo (normal) hasta el siguiente hechizo. Sobrecargado usa castCooldownTicks
+		# Default: 3
+		# Range: 0 ~ 400
+		cooldownTicks = 3
+		#Velocidad del tajo (bloques por tick)
+		# Default: 1.3
+		# Range: 0.1 ~ 5.0
+		speed = 1.3
+		#Sangrado: segundos que dura (no afecta a muertos vivientes ni golems)
+		# Default: 5
+		# Range: 0 ~ 120
+		bleedSeconds = 5
+		#Sangrado: dano cada segundo (fijo, no depende de la proficiencia)
+		# Default: 0.5
+		# Range: 0.0 ~ 100.0
+		bleedDamage = 0.5
+		#Sobrecargada (tornado de viento): mana que gasta
+		# Default: 15
+		# Range: 0 ~ 1000
+		overManaCost = 15
+		#Sobrecargada: dano al caer la bola (la mitad en el borde de overRadius), antes del multiplicador de Ventus. No quema ni rompe bloques
+		# Default: 8.0
+		# Range: 0.0 ~ 1000.0
+		overDamage = 8.0
+		#Sobrecargada: radio del golpe al caer la bola (bloques)
+		# Default: 3.5
+		# Range: 0.5 ~ 32.0
+		overRadius = 3.5
+		#Tornado de viento: dano cada medio segundo a los atrapados (cortes del aire, sin fuego), antes del multiplicador de Ventus
+		# Default: 2.0
+		# Range: 0.0 ~ 1000.0
+		tornadoDamage = 2.0
+		#Tornado de viento: radio en el que atrapa (bloques)
+		# Default: 5.0
+		# Range: 0.5 ~ 32.0
+		tornadoRadius = 5.0
+		#Tornado de viento: ticks que dura (al acabar suelta a los atrapados lanzandolos hacia fuera). Una Bola de fuego lo convierte en torbellino de fuego
+		# Default: 120
+		# Range: 10 ~ 600
+		tornadoTicks = 120
+		#Tornado de viento: fuerza con la que atrae y levanta
+		# Default: 0.22
+		# Range: 0.0 ~ 2.0
+		tornadoPull = 0.22
+		#Tornado oscuro (un golpe de la Espada de liquido o su tentaculo en el tornado de viento): dano cada medio segundo, x la proficiencia en Obscuritas de quien lo oscurece
+		# Default: 5.0
+		# Range: 0.0 ~ 1000.0
+		darkTornadoDamage = 5.0
+		#Tornado oscuro: ticks que dura desde que se oscurece
+		# Default: 120
+		# Range: 10 ~ 600
+		darkTornadoTicks = 120
+		#Tornado de arena (un hechizo de Terra en un tornado de viento aliado, o el tornado que cae en el area de los Pinchos de piedra sobrecargados): ticks que dura desde que se vuelve de arena
+		# Default: 120
+		# Range: 10 ~ 600
+		sandTornadoTicks = 120
+		#Tornado de arena: nivel de Lentitud a los enemigos de dentro (1 = Lentitud I)
+		# Default: 3
+		# Range: 1 ~ 10
+		sandSlowLevel = 3
+		#Tornado de arena: ticks que les dura la Lentitud (se renueva mientras sigan dentro)
+		# Default: 60
+		# Range: 1 ~ 1200
+		sandSlowTicks = 60
+		#Tornado de tormenta (la Bola de rayo o su gran rayo en un tornado de viento aliado, o el tornado que cae donde va a caer / acaba de caer el gran rayo): ticks que dura desde que se vuelve de tormenta
+		# Default: 140
+		# Range: 10 ~ 600
+		stormTornadoTicks = 140
+		#Tornado de tormenta: cada cuantos ticks suelta rayos a los enemigos de cerca
+		# Default: 15
+		# Range: 2 ~ 200
+		stormBoltInterval = 15
+		#Tornado de tormenta: a cuantos enemigos como mucho golpea en cada descarga
+		# Default: 2
+		# Range: 0 ~ 20
+		stormBoltTargets = 2
+		#Tornado de tormenta: bloques fuera del tornado hasta donde llegan sus rayos
+		# Default: 4.0
+		# Range: 0.0 ~ 32.0
+		stormBoltRange = 4.0
+		#Tornado de tormenta: dano de cada rayo, x la proficiencia en Fulgur de quien lo electrifica
+		# Default: 5.0
+		# Range: 0.0 ~ 1000.0
+		stormBoltDamage = 5.0
+		#Tornado de tormenta: ticks que deja aturdido (casi sin poder moverse) cada rayo
+		# Default: 20
+		# Range: 0 ~ 400
+		stormStunTicks = 20
+
+	[spells.light_heal]
+		#Mana que gasta el Escudo de luz (Luminis)
+		# Default: 8
+		# Range: 0 ~ 1000
+		manaCost = 8
+		#Escudo individual: dano total que puede parar (antes del multiplicador de proficiencia de Luminis). Cada golpe gasta de ahi; si uno gasta mas de lo que queda, se rompe y pasa el sobrante. La cruz de llamas doradas tambien lo pone
+		# Default: 16.0
+		# Range: 0.0 ~ 1000.0
+		shieldAmount = 16.0
+		#Escudo individual: ticks que dura (al acabar se rompe)
+		# Default: 600
+		# Range: 10 ~ 12000
+		shieldDuration = 600
+		#Parte del dano de un hechizo que el escudo le devuelve al que lo lanzo (los proyectiles rebotan con esa parte de su dano)
+		# Default: 0.5
+		# Range: 0.0 ~ 10.0
+		spellReflect = 0.5
+		#Golpes fisicos: el escudo hace parry (no devuelve dano) pero gasta este multiplicador del dano (es mas vulnerable a ellos)
+		# Default: 2.0
+		# Range: 0.0 ~ 100.0
+		physicalCost = 2.0
+		#Cuantos aliados (jugadores y mascotas) se pueden marcar mientras cargas
+		# Default: 3
+		# Range: 1 ~ 16
+		maxTargets = 3
+		#Sobrecargado (cupula de luz): mana que gasta
+		# Default: 18
+		# Range: 0 ~ 1000
+		overManaCost = 18
+		#Cupula de luz: dano total que puede parar entre todos los aliados de dentro (antes del multiplicador de Luminis)
+		# Default: 32.0
+		# Range: 0.0 ~ 1000.0
+		areaShieldAmount = 32.0
+		#Cupula de luz: radio (bloques)
+		# Default: 4.5
+		# Range: 0.5 ~ 32.0
+		areaRadius = 4.5
+		#Cupula de luz: ticks que dura. Si le alcanza una Bola de fuego se convierte en la cruz de llamas doradas
+		# Default: 240
+		# Range: 10 ~ 2400
+		areaDuration = 240
+		#Cupula de viento y luz (le llega Ventus de un aliado: el Tajo de viento, su bola sobrecargada, o se pone sobre un tornado de viento): ticks que dura desde que se convierte
+		# Default: 240
+		# Range: 10 ~ 2400
+		windDomeDuration = 240
+		#Cupula de viento y luz: lo que gasta de la reserva cada golpe que para (1 = como la de luz; 0,5 = la mitad)
+		# Default: 0.5
+		# Range: 0.0 ~ 10.0
+		windDomeCost = 0.5
+		#Cupula de viento y luz: fuerza con la que echa fuera a los enemigos que intentan entrar
+		# Default: 0.7
+		# Range: 0.0 ~ 5.0
+		windDomePush = 0.7
+		#Muro de cuarzo de luz (le llega Terra de un aliado: los Pinchos de piedra, su roca, o se pone sobre el area de los pinchos sobrecargados): ticks que dura desde que se convierte
+		# Default: 240
+		# Range: 10 ~ 2400
+		crystalDomeDuration = 240
+		#Muro de cuarzo de luz: multiplica la reserva que le quede a la cupula al convertirse
+		# Default: 1.5
+		# Range: 0.1 ~ 20.0
+		crystalDomePool = 1.5
+		#Muro de cuarzo de luz: lo que gasta de la reserva cada golpe fisico que para (1 = como la de luz)
+		# Default: 0.25
+		# Range: 0.0 ~ 10.0
+		crystalDomePhysCost = 0.25
+		#Muro de cuarzo de luz: lo que gasta cada hechizo que para (1 = como la de luz)
+		# Default: 0.6
+		# Range: 0.0 ~ 10.0
+		crystalDomeSpellCost = 0.6
+		#Cupula de luz: hasta cuantos bloques de donde miras se puede poner
+		# Default: 24.0
+		# Range: 2.0 ~ 128.0
+		areaRange = 24.0
+		#Muro de cuarzo de luz: dano de los cristales del suelo al tocarlos un enemigo, x la proficiencia en Terra de quien puso el cuarzo
+		# Default: 3.0
+		# Range: 0.0 ~ 1000.0
+		crystalContactDamage = 3.0
+		#Muro de cuarzo de luz: ticks entre dos golpes de los cristales al mismo enemigo (comun a todos los cristales)
+		# Default: 20
+		# Range: 1 ~ 1200
+		crystalContactCooldown = 20
+		#Muro de cuarzo de luz: fuerza con la que los cristales empujan hacia fuera al que los toca
+		# Default: 0.6
+		# Range: 0.0 ~ 5.0
+		crystalContactPush = 0.6
+		#Mana que gastan el Escudo de cuarzo, el de viento y el de llamas (Escudo de luz + Terra / Ventus / Ignis)
+		# Default: 10
+		# Range: 0 ~ 1000
+		comboManaCost = 10
+		#Sobrecargados (el muro de cuarzo / la cupula de viento y luz directamente): mana que gastan
+		# Default: 20
+		# Range: 0 ~ 1000
+		comboOverManaCost = 20
+		#Escudo de llamas (Escudo de luz + Ignis): los golpes fisicos lo atraviesan, pero el que pega cuerpo a cuerpo arde estos segundos
+		# Default: 4
+		# Range: 0 ~ 60
+		flameShieldBurnSeconds = 4
+
+	[spells.water_heal]
+		#Mana que gasta la Marea sanadora (Aqua)
+		# Default: 8
+		# Range: 0 ~ 1000
+		manaCost = 8
+		#Vida que cura a cada aliado marcado (o a ti si no marcaste a nadie) cuando el agua termina de rodearle, antes del multiplicador de proficiencia de Aqua
+		# Default: 16.0
+		# Range: 0.0 ~ 1000.0
+		healing = 16.0
+		#Cuantos aliados (tu equipo y las mascotas) se pueden marcar mientras cargas
+		# Default: 3
+		# Range: 1 ~ 16
+		maxTargets = 3
+		#Sobrecargada (gota y ola en un area): mana que gasta
+		# Default: 18
+		# Range: 0 ~ 1000
+		overManaCost = 18
+		#Area: vida que cura de una vez a cada aliado de dentro cuando cae la gota, antes del multiplicador de Aqua
+		# Default: 20.0
+		# Range: 0.0 ~ 1000.0
+		areaHealing = 20.0
+		#Area: radio (bloques)
+		# Default: 4.5
+		# Range: 0.5 ~ 32.0
+		areaRadius = 4.5
+		#Area: hasta cuantos bloques de donde miras se puede poner
+		# Default: 24.0
+		# Range: 2.0 ~ 128.0
+		areaRange = 24.0
+
+	[spells.earth_spikes]
+		#Mana que gastan los Pinchos de piedra (Terra)
+		# Default: 8
+		# Range: 0 ~ 1000
+		manaCost = 8
+		#Dano de cada pincho de la fila a quien pille (una vez por pincho), antes del multiplicador de proficiencia de Terra
+		# Default: 7.0
+		# Range: 0.0 ~ 1000.0
+		damage = 7.0
+		#Cuantos pinchos tiene la fila (salen uno tras otro hacia delante, a ~1 bloque cada uno)
+		# Default: 9
+		# Range: 1 ~ 30
+		spikes = 9
+		#Impulso hacia arriba de los pinchos
+		# Default: 0.55
+		# Range: 0.0 ~ 3.0
+		launch = 0.55
+		#Sobrecargada (la roca condensada que revienta en pinchos): mana que gasta
+		# Default: 18
+		# Range: 0 ~ 1000
+		overManaCost = 18
+		#Sobrecargada: dano de los pinchos del area (una vez por oleada), antes del multiplicador de Terra
+		# Default: 10.0
+		# Range: 0.0 ~ 1000.0
+		overDamage = 10.0
+		#Sobrecargada: radio del area de pinchos (bloques)
+		# Default: 4.8
+		# Range: 0.5 ~ 32.0
+		overRadius = 4.8
+		#Sobrecargada: ticks que el area de pinchos admite la Bola de fuego de un aliado para convertirse en la erupcion de magma (Bola de fuego + Terra)
+		# Default: 110
+		# Range: 10 ~ 1200
+		comboTicks = 110
+		#Sobrecargada: velocidad a la que sale lanzada la roca (cae en arco)
+		# Default: 1.1
+		# Range: 0.1 ~ 5.0
+		rockSpeed = 1.1
+		#Pinchos de piedra (la fila y los de la sobrecarga): dano al enemigo que toca un pincho mientras esta fuera, x la proficiencia en Terra. Un golpe como mucho cada stoneContactCooldown ticks por enemigo (comun a todos los pinchos)
+		# Default: 3.0
+		# Range: 0.0 ~ 1000.0
+		stoneContactDamage = 3.0
+		#Pinchos de piedra: ticks entre dos golpes por contacto al mismo enemigo
+		# Default: 20
+		# Range: 1 ~ 1200
+		stoneContactCooldown = 20
+
+	[spells.wind_slash_combos]
+		#Mana que gastan el Viento oscuro, el Viento de arena y el Viento de tormenta (Tajo de viento + Obscuritas / Terra / Fulgur)
+		# Default: 10
+		# Range: 0 ~ 1000
+		manaCost = 10
+		#Sobrecargados (el tornado sale ya oscuro / de arena / de tormenta): mana que gastan
+		# Default: 18
+		# Range: 0 ~ 1000
+		overManaCost = 18
+		#Viento de arena: ticks de Lentitud al enemigo cortado (nivel: sandSlowLevel del tornado de arena)
+		# Default: 60
+		# Range: 0 ~ 1200
+		sandSlowTicks = 60
+		#Viento de tormenta: dano del rayo que salta del cortado a los enemigos cercanos, x la proficiencia en Fulgur
+		# Default: 4.0
+		# Range: 0.0 ~ 1000.0
+		stormChainDamage = 4.0
+		#Viento de tormenta: a cuantos enemigos cercanos salta el rayo como mucho
+		# Default: 2
+		# Range: 0 ~ 20
+		stormChainTargets = 2
+		#Viento de tormenta: hasta cuantos bloques del cortado salta el rayo
+		# Default: 5.0
+		# Range: 0.0 ~ 32.0
+		stormChainRange = 5.0
+		#Viento de tormenta: ticks que deja aturdidos a los que alcanza el rayo
+		# Default: 15
+		# Range: 0 ~ 400
+		stormStunTicks = 15
+		#Tajo de agua: fuerza con la que el agua empuja hacia atras al cortado
+		# Default: 0.9
+		# Range: 0.0 ~ 5.0
+		waterPush = 0.9
+		#Tajo de fuego: segundos que arde el cortado
+		# Default: 4
+		# Range: 0 ~ 60
+		fireSeconds = 4
+		#Tromba de agua (Tajo de agua sobrecargado): vida que cura cada segundo a los aliados de dentro, x la proficiencia en Aqua
+		# Default: 1.0
+		# Range: 0.0 ~ 100.0
+		waterTornadoHeal = 1.0

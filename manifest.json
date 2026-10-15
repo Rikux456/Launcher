@@ -1,0 +1,101 @@
+{
+  "name": "Derisomod",
+  "minecraft": "1.21.1",
+  "loader": "neoforge",
+  "version": "fcdd430f",
+  "mirrorDirs": [
+    "mods"
+  ],
+  "files": [
+    {
+      "path": "config/derisomod-client.toml",
+      "sha1": "e19638bcaf204ef8989b1440751559fd8041df7c",
+      "size": 2478
+    },
+    {
+      "path": "config/derisomod-server.toml",
+      "sha1": "1c7ec971966dfbec129f3d1dff2072d3d5a6c577",
+      "size": 37743
+    },
+    {
+      "path": "config/derisomod_characters-server.toml",
+      "sha1": "8a8b814c62933c6178b6f7d9c7d8508ee4340a56",
+      "size": 1327
+    },
+    {
+      "path": "config/derisomod_transmute.json",
+      "sha1": "7cc22c5ded6408f1f9167548d71a92d64826a9fe",
+      "size": 92
+    },
+    {
+      "path": "config/fml.toml",
+      "sha1": "9fca24533100755c12e7d1a82f8c524d0a163ff6",
+      "size": 1550
+    },
+    {
+      "path": "config/levelmod-client.toml",
+      "sha1": "761d109ac249bbebdef208656c4cc128ab063e96",
+      "size": 2027
+    },
+    {
+      "path": "config/levelmod-server.toml",
+      "sha1": "8e5c2484c5833b03d04a104c1ad4b8323d675a5e",
+      "size": 33178
+    },
+    {
+      "path": "config/neoforge-client.toml",
+      "sha1": "b51515abb0c65a891514baffb4c78d2357ecd1ed",
+      "size": 578
+    },
+    {
+      "path": "config/neoforge-common.toml",
+      "sha1": "6b10e4debbf06a33453f4e0ffb80281ff0752f9f",
+      "size": 772
+    },
+    {
+      "path": "config/neoforge-server.toml",
+      "sha1": "536538f1f29efb49318318113530bd4fd74c235b",
+      "size": 1177
+    },
+    {
+      "path": "mods/Controlling-neoforge-1.21.1-19.0.5.jar",
+      "sha1": "8a34424fc1428778be2fdbfa4da67b21b70bcbfe",
+      "size": 77555
+    },
+    {
+      "path": "mods/derisomod-2.4.jar",
+      "sha1": "eb1ad735f9c5ef7453b9ced87e39536e30b71e19",
+      "size": 7750507
+    },
+    {
+      "path": "mods/derisomod_characters-0.17.2.jar",
+      "sha1": "423cd1320fadbc2d7ad4a3784ee72c6663440efb",
+      "size": 867238
+    },
+    {
+      "path": "mods/Essential_1-5-0-1_neoforge_1-21-1.jar",
+      "sha1": "bcdade1307e9f927d6e7544b798dbddb613704c5",
+      "size": 51428972
+    },
+    {
+      "path": "mods/geckolib-neoforge-1.21.1-4.9.3.jar",
+      "sha1": "5cfe835472a5c5457ae9ac192d9d7b317454d5ac",
+      "size": 634531
+    },
+    {
+      "path": "mods/player-animation-lib-forge-2.0.4+1.21.1.jar",
+      "sha1": "05be8ddcc78532b9a5520c718edc6c971cd0057c",
+      "size": 203149
+    },
+    {
+      "path": "mods/Searchables-neoforge-1.21.1-1.0.2.jar",
+      "sha1": "5b8a0b43a474c066371b2e16f9bfb88622552a74",
+      "size": 77326
+    },
+    {
+      "path": "mods/veil-neoforge-1.21.1-4.5.2.jar",
+      "sha1": "b9994fd16bac1f78633e17b69ea04b76c0f2654f",
+      "size": 3402614
+    }
+  ]
+}

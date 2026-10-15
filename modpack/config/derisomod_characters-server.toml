@@ -1,0 +1,46 @@
+#Tajo de sangre (Sanguine, Blake)
+[blood_slash]
+	#Mana que gasta el tajo
+	# Default: 7
+	# Range: 0 ~ 1000
+	manaCost = 7
+	#Dano a cada enemigo que corta, antes del multiplicador de proficiencia de Sanguine
+	# Default: 7.0
+	# Range: 0.0 ~ 1000.0
+	damage = 7.0
+	#Velocidad del tajo (bloques por tick)
+	# Default: 1.1
+	# Range: 0.1 ~ 5.0
+	speed = 1.1
+	#Bloques que recorre antes de deshacerse
+	# Default: 24.0
+	# Range: 2.0 ~ 128.0
+	range = 24.0
+	#Ticks de espera tras el tajo hasta el siguiente hechizo
+	# Default: 8
+	# Range: 0 ~ 400
+	cooldownTicks = 8
+	#Combo (diagonal, diagonal izquierda, lateral): el tercer golpe hace este multiplicador del dano
+	# Default: 1.4
+	# Range: 0.0 ~ 10.0
+	comboFinisherMultiplier = 1.4
+	#Sobrecargado (la X): mana que gasta
+	# Default: 18
+	# Range: 0 ~ 1000
+	overManaCost = 18
+	#Sobrecargado: dano a cada enemigo que alcanza la X, antes del multiplicador de proficiencia
+	# Default: 16.0
+	# Range: 0.0 ~ 1000.0
+	overDamage = 16.0
+	#Sobrecargado: velocidad de la X (bloques por tick)
+	# Default: 0.9
+	# Range: 0.1 ~ 5.0
+	overSpeed = 0.9
+	#Sobrecargado: bloques que recorre la X
+	# Default: 30.0
+	# Range: 2.0 ~ 128.0
+	overRange = 30.0
+	#Sobrecargado: ticks de espera hasta el siguiente hechizo
+	# Default: 16
+	# Range: 0 ~ 400
+	overCooldownTicks = 16

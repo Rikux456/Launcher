@@ -1,0 +1,42 @@
+#Barra de mana encima de la barra de experiencia
+showManaBar = true
+#Animacion de abrir el libro al entrar en el menu de nivel
+bookOpenAnimation = true
+#Efecto de pantalla del parry (destello + onda de distorsion con Veil)
+parryScreenEffect = true
+#Pose de guardia y retroceso del arma al bloquear (primera y tercera persona, solo sin Epic Fight)
+guardAnimation = true
+#Ver el brazo sujetando el arma durante el corte del parry (primera persona)
+parryShowArm = true
+#Correr por paredes: girar la camara para que la pared/techo sea tu suelo (y el raton gira relativo a ella).
+#Si te marea, ponlo en false: la camara queda normal y te mueves hacia donde miras.
+surfaceCameraRotation = true
+#Hechizo en la mano (primera persona): cuanto se sube el brazo con el orbe (0 = donde va la mano vacia)
+# Default: 0.2
+# Range: -0.5 ~ 1.0
+spellHandRaise = 0.2
+#Hechizo en la mano (primera persona): altura del orbe por encima de la mano (en bloques; mas = mas arriba)
+# Default: 0.32
+# Range: 0.0 ~ 1.5
+spellOrbHeight = 0.32
+#Hechizos de fuego: distorsion de calor alrededor de la bola y onda de choque al explotar (Veil)
+spellHeatDistortion = true
+#Efecto de velocidad (Veil) y FOV al tener el impulso lleno / correr por paredes
+speedEffect = true
+#Aviso tipo Sekiro (simbolo rojo + campana) justo antes de que un mob te golpee
+attackWarning = true
+#Sonido de campana con el aviso
+attackWarningSound = true
+#La Zona: filtro azul oscuro con distorsion (Veil) cuando estas dentro de una zona
+zoneScreenEffect = true
+#La Zona: los sonidos suenan mas graves dentro de una zona
+zoneSlowSound = true
+#Estela de siluetas al moverte dentro de La Zona (mas larga en nivel 2)
+afterImages = true
+#Volumen de la musica de Scylla en la escena de origen (1,0 = maximo, 0,1 = minimo).
+#Se suma a tu volumen de Musica del juego.
+# Default: 1.0
+# Range: 0.1 ~ 1.0
+scyllaMusicVolume = 1.0
+#Golpe de camara del parry: hit-stop, ladeo, temblor y zoom (primera persona, tambien con Epic Fight)
+parryCameraKick = true
