@@ -5,12 +5,18 @@ El jugador abre el launcher, le da a **Actualizar** y después a **Jugar**.
 
 ## Para jugadores
 
-1. Instala **NeoForge para Minecraft 1.21.1** (solo una vez): https://neoforged.net/ → instalador → *Install client*.
-2. Descarga el launcher desde [Releases](../../releases/latest):
+1. Descarga el launcher desde [Releases](../../releases/latest):
    - `Derisomod-Launcher-Windows.zip`: descomprímelo y abre `Derisomod Launcher.exe` (lleva Java incluido).
    - `Derisomod-Launcher.jar`: si ya tienes Java 21.
-3. Dale a **Actualizar** y luego a **Jugar**. El launcher crea un perfil "Derisomod" en el launcher oficial de Minecraft
-   que usa su propia carpeta, así que no toca tus otros mods ni mundos.
+2. Elige dónde jugar en **Instalar en** (debajo del título):
+   - **Modrinth**: crea una vez en Modrinth App un perfil **NeoForge 1.21.1** llamado `Derisomod` (sin mods).
+     El launcher lo detecta solo. *Jugar* abre Modrinth y ahí le das a jugar en ese perfil.
+   - **Prism Launcher**: igual, una instancia NeoForge 1.21.1. *Jugar* arranca el juego directamente.
+   - **Launcher oficial**: instala NeoForge 1.21.1 (https://neoforged.net/ → *Install client*).
+     *Jugar* crea el perfil "Derisomod" y abre el launcher oficial.
+3. Dale a **Actualizar** y luego a **Jugar**.
+
+Los mods de esa instancia quedan idénticos a los del modpack: si hay otros mods, el launcher avisa antes de quitarlos.
 
 ## Para el creador del modpack
 

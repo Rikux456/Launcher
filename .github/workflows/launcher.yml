@@ -18,7 +18,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -41,13 +41,13 @@ jobs:
           mkdir -p build/classes dist
           javac -encoding UTF-8 -d build/classes launcher-src/Launcher.java
           printf "Main-Class: Launcher\n" > build/manifest.txt
-          jar cfm dist/Derisomod-Launcher.jar build/manifest.txt -C build/classes .
+          jar cfm dist/Derisomod-Launcher.jar build/manifest.txt -C build/classes . -C launcher-src/resources .
       - name: Crear .exe con Java incluido
         shell: bash
         run: |
           VERSION="${{ steps.ver.outputs.version }}"
           jpackage --type app-image --name "Derisomod Launcher" --app-version "$VERSION" \
-            --input dist --main-jar Derisomod-Launcher.jar --main-class Launcher \
+            --input dist --main-jar Derisomod-Launcher.jar --main-class Launcher --icon launcher-src/icon.ico \
             --add-modules java.desktop,java.net.http --dest build/app
           cd build/app && 7z a ../../dist/Derisomod-Launcher-Windows.zip "Derisomod Launcher"
       - name: Publicar release

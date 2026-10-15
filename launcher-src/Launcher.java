@@ -28,7 +28,7 @@ public class Launcher {
     static final String PACK_NAME = "Derisomod";
     static final String REPO = "Rikux456/Launcher";      // usuario/repositorio de GitHub
     static final String BRANCH = "main";
-    static final String LAUNCHER_VERSION = "1.0.0";     // súbelo al publicar un launcher nuevo
+    static final String LAUNCHER_VERSION = "1.1.0";     // súbelo al publicar un launcher nuevo
     static final String RAM = "-Xmx4G";                  // memoria para el perfil de Minecraft
     // ===========================
 
@@ -302,16 +302,17 @@ public class Launcher {
     static String newsHtml(String commit) {
         try {
             Object parsed = Json.parse(getText(RAW_BASE + "/" + commit + "/news.json"));
-            StringBuilder sb = new StringBuilder("<html><body style='font-family:sans-serif;font-size:11px;'>");
+            StringBuilder sb = new StringBuilder();
             for (Object o : (List<Object>) parsed) {
                 Map<String, Object> n = (Map<String, Object>) o;
-                sb.append("<p><b>").append(esc(String.valueOf(n.getOrDefault("titulo", "")))).append("</b>")
-                  .append(" <span style='color:gray'>").append(esc(String.valueOf(n.getOrDefault("fecha", "")))).append("</span><br>")
+                sb.append("<p style='margin:0 0 12px 0'><span style='font-family:\"Grenze Gotisch\";font-size:15px;color:#FFFFFF'>")
+                  .append(esc(String.valueOf(n.getOrDefault("titulo", "")))).append("</span>")
+                  .append(" &nbsp;<span style='color:#9A9AB2'>").append(esc(String.valueOf(n.getOrDefault("fecha", "")))).append("</span><br>")
                   .append(esc(String.valueOf(n.getOrDefault("texto", ""))).replace("\n", "<br>")).append("</p>");
             }
-            return sb.append("</body></html>").toString();
+            return htmlWrap(sb.toString());
         } catch (Exception e) {
-            return "<html><body style='font-family:sans-serif;color:gray'>No se pudieron cargar las noticias.</body></html>";
+            return htmlWrap("<p style='color:#9A9AB2'>No se pudieron cargar las novedades.</p>");
         }
     }
 
@@ -327,17 +328,278 @@ public class Launcher {
         return null;
     }
 
+    // ---------- Destinos: launcher oficial, Modrinth, Prism ----------
+
+    enum Kind { OFFICIAL, MODRINTH, PRISM, CUSTOM }
+
+    record Target(Kind kind, String name, Path dir, String instanceId) {
+        String label() {
+            return switch (kind) {
+                case OFFICIAL -> "Launcher oficial";
+                case MODRINTH -> "Modrinth · " + name;
+                case PRISM -> "Prism · " + name;
+                case CUSTOM -> "Carpeta · " + dir.getFileName();
+            };
+        }
+    }
+
+    static Path appData() {
+        String home = System.getProperty("user.home");
+        if (isWindows()) { String a = System.getenv("APPDATA"); return Paths.get(a != null ? a : home); }
+        if (isMac()) return Paths.get(home, "Library", "Application Support");
+        String xdg = System.getenv("XDG_DATA_HOME");
+        return xdg != null ? Paths.get(xdg) : Paths.get(home, ".local", "share");
+    }
+
+    static List<Path> subdirs(Path dir) {
+        List<Path> out = new ArrayList<>();
+        if (!Files.isDirectory(dir)) return out;
+        try (DirectoryStream<Path> ds = Files.newDirectoryStream(dir, Files::isDirectory)) {
+            for (Path p : ds) if (!p.getFileName().toString().startsWith(".") && !p.getFileName().toString().startsWith("_")) out.add(p);
+        } catch (IOException ignored) { }
+        out.sort(Comparator.comparing(p -> p.getFileName().toString().toLowerCase(Locale.ROOT)));
+        return out;
+    }
+
+    /** Busca las instancias de Modrinth App y Prism Launcher que tenga el jugador. */
+    static List<Target> detectTargets() {
+        List<Target> t = new ArrayList<>();
+        t.add(new Target(Kind.OFFICIAL, "Launcher oficial", defaultGameDir(), null));
+        for (String app : List.of("ModrinthApp", "com.modrinth.theseus"))
+            for (Path p : subdirs(appData().resolve(app).resolve("profiles")))
+                t.add(new Target(Kind.MODRINTH, p.getFileName().toString(), p, null));
+        List<Path> prismRoots = new ArrayList<>(List.of(appData().resolve("PrismLauncher").resolve("instances")));
+        if (!isWindows() && !isMac()) prismRoots.add(Paths.get(System.getProperty("user.home"), ".var", "app",
+                "org.prismlauncher.PrismLauncher", "data", "PrismLauncher", "instances"));
+        for (Path root : prismRoots)
+            for (Path p : subdirs(root)) {
+                Path mc = Files.isDirectory(p.resolve("minecraft")) ? p.resolve("minecraft") : p.resolve(".minecraft");
+                if (Files.exists(p.resolve("instance.cfg")))
+                    t.add(new Target(Kind.PRISM, p.getFileName().toString(), mc, p.getFileName().toString()));
+            }
+        return t;
+    }
+
+    static Target targetFromSettings(Properties s, List<Target> detected) {
+        String kind = s.getProperty("targetKind"), dir = s.getProperty("targetDir");
+        if (kind != null && dir != null) {
+            for (Target t : detected) if (t.kind().name().equals(kind) && t.dir().toString().equals(dir)) return t;
+            if (kind.equals("CUSTOM")) return new Target(Kind.CUSTOM, dir, Paths.get(dir), null);
+        }
+        // Primera vez: si ya hay una instancia con el nombre del pack, usamos esa
+        for (Target t : detected)
+            if (t.kind() != Kind.OFFICIAL && t.name().toLowerCase(Locale.ROOT).contains(PACK_NAME.toLowerCase(Locale.ROOT))) return t;
+        return detected.get(0);
+    }
+
+    static boolean tryStart(String... cmd) {
+        try {
+            if (cmd[0].contains(File.separator) && !Files.exists(Paths.get(cmd[0]))) return false;
+            new ProcessBuilder(cmd).start();
+            return true;
+        } catch (IOException e) { return false; }
+    }
+
+    static boolean openModrinth() {
+        if (isWindows()) {
+            String local = System.getenv("LOCALAPPDATA"), pf = System.getenv("ProgramFiles");
+            return (local != null && tryStart(local + "\\Modrinth App\\Modrinth App.exe"))
+                    || (local != null && tryStart(local + "\\Programs\\Modrinth App\\Modrinth App.exe"))
+                    || (pf != null && tryStart(pf + "\\Modrinth App\\Modrinth App.exe"));
+        }
+        if (isMac()) return tryStart("open", "-a", "Modrinth App");
+        return tryStart("ModrinthApp") || tryStart("modrinth-app");
+    }
+
+    static boolean launchPrism(String instanceId) {
+        if (isWindows()) {
+            String local = System.getenv("LOCALAPPDATA"), pf = System.getenv("ProgramFiles");
+            return (local != null && tryStart(local + "\\Programs\\PrismLauncher\\prismlauncher.exe", "--launch", instanceId))
+                    || (pf != null && tryStart(pf + "\\PrismLauncher\\prismlauncher.exe", "--launch", instanceId));
+        }
+        if (isMac()) return tryStart("/Applications/Prism Launcher.app/Contents/MacOS/prismlauncher", "--launch", instanceId);
+        return tryStart("prismlauncher", "--launch", instanceId)
+                || tryStart("flatpak", "run", "org.prismlauncher.PrismLauncher", "--launch", instanceId);
+    }
+
+    // ---------- Estilo ----------
+
+    static final Color BG_TOP = new Color(0x0D0D1F), BG_BOTTOM = new Color(0x38384A);
+    static final Color TEXT = new Color(0xECECF4), MUTED = new Color(0x9A9AB2), LINE = new Color(255, 255, 255, 40);
+    static Font gothicBold, gothicMedium, body;
+
+    static Font loadFont(String res, float fallbackSize) {
+        try (InputStream in = Launcher.class.getResourceAsStream("/" + res)) {
+            Font f = Font.createFont(Font.TRUETYPE_FONT, in);
+            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(f);
+            return f;
+        } catch (Exception e) { return new Font(Font.SERIF, Font.BOLD, (int) fallbackSize); }
+    }
+
+    static void loadStyle() {
+        gothicBold = loadFont("GrenzeGotisch-Bold.ttf", 48);
+        gothicMedium = loadFont("GrenzeGotisch-Medium.ttf", 20);
+        String fam = Arrays.asList(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames()).contains("Segoe UI")
+                ? "Segoe UI" : Font.SANS_SERIF;
+        body = new Font(fam, Font.PLAIN, 13);
+        Color panel = new Color(0x1E1E30);
+        for (String k : List.of("OptionPane.background", "Panel.background")) UIManager.put(k, panel);
+        UIManager.put("OptionPane.messageForeground", TEXT);
+        UIManager.put("Label.foreground", TEXT);
+        UIManager.put("PopupMenu.background", panel);
+        UIManager.put("PopupMenu.border", BorderFactory.createLineBorder(LINE));
+        UIManager.put("MenuItem.background", panel);
+        UIManager.put("MenuItem.foreground", TEXT);
+        UIManager.put("MenuItem.selectionBackground", new Color(0x45455C));
+        UIManager.put("MenuItem.selectionForeground", Color.WHITE);
+        UIManager.put("Separator.foreground", LINE);
+    }
+
+    static Image appIcon() {
+        try (InputStream in = Launcher.class.getResourceAsStream("/icon.png")) { return javax.imageio.ImageIO.read(in); }
+        catch (Exception e) { return null; }
+    }
+
+    /** Fondo con degradado. */
+    static final class Backdrop extends JPanel {
+        Backdrop(LayoutManager l) { super(l); setOpaque(true); }
+        @Override protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setPaint(new GradientPaint(0, 0, BG_TOP, getWidth() * 0.35f, getHeight(), BG_BOTTOM));
+            g2.fillRect(0, 0, getWidth(), getHeight());
+            g2.dispose();
+        }
+    }
+
+    /** El sigilo: gira mientras se descarga y frena suavemente al terminar. */
+    static final class Sigil extends JComponent {
+        private final Image img;
+        private double angle, speed, targetSpeed;
+        private final javax.swing.Timer timer;
+
+        Sigil() {
+            Image i = null;
+            try (InputStream in = Launcher.class.getResourceAsStream("/sigil.png")) { i = javax.imageio.ImageIO.read(in); }
+            catch (Exception ignored) { }
+            img = i;
+            setOpaque(false);
+            timer = new javax.swing.Timer(16, e -> {
+                speed += (targetSpeed - speed) * 0.04;
+                if (targetSpeed == 0 && speed < 0.01) { speed = 0; ((javax.swing.Timer) e.getSource()).stop(); }
+                angle = (angle + speed) % 360;
+                repaint();
+            });
+        }
+
+        void spin(boolean on) {
+            targetSpeed = on ? 2.2 : 0;
+            if (on && !timer.isRunning()) timer.start();
+            if (!on && speed > 0 && !timer.isRunning()) timer.start();
+        }
+
+        @Override protected void paintComponent(Graphics g) {
+            if (img == null) return;
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            int size = Math.min(getWidth(), getHeight()) - 20;
+            double cx = getWidth() / 2.0, cy = getHeight() / 2.0;
+            // halo suave detrás
+            float r = size * 0.5f;
+            g2.setPaint(new RadialGradientPaint(new java.awt.geom.Point2D.Double(cx, cy), r,
+                    new float[]{0f, 1f}, new Color[]{new Color(255, 255, 255, 26), new Color(255, 255, 255, 0)}));
+            g2.fill(new java.awt.geom.Ellipse2D.Double(cx - r, cy - r, r * 2, r * 2));
+            g2.rotate(Math.toRadians(angle), cx, cy);
+            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.92f));
+            g2.drawImage(img, (int) (cx - size / 2.0), (int) (cy - size / 2.0), size, size, null);
+            g2.dispose();
+        }
+    }
+
+    /** Barra de progreso fina. */
+    static final class Bar extends JComponent {
+        double value;
+        Bar() { setPreferredSize(new Dimension(10, 8)); }
+        void set(double v) { value = Math.max(0, Math.min(1, v)); repaint(); }
+        @Override protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            int h = getHeight(), w = getWidth();
+            g2.setColor(new Color(255, 255, 255, 30));
+            g2.fillRoundRect(0, 0, w, h, h, h);
+            int fw = (int) Math.round(w * value);
+            if (fw > 0) {
+                g2.setPaint(new GradientPaint(0, 0, new Color(0xB8B8D0), w, 0, Color.WHITE));
+                g2.fillRoundRect(0, 0, Math.max(fw, h), h, h, h);
+            }
+            g2.dispose();
+        }
+    }
+
+    /** Botón plano: relleno blanco (principal) o contorno (secundario). */
+    static final class FlatButton extends JButton {
+        private final boolean primary;
+        private boolean hover;
+        FlatButton(String text, boolean primary) {
+            super(text);
+            this.primary = primary;
+            setFont(gothicMedium.deriveFont(primary ? 20f : 17f));
+            setContentAreaFilled(false); setBorderPainted(false); setFocusPainted(false); setOpaque(false);
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            setBorder(new EmptyBorder(6, primary ? 26 : 16, 6, primary ? 26 : 16));
+            addMouseListener(new java.awt.event.MouseAdapter() {
+                public void mouseEntered(java.awt.event.MouseEvent e) { hover = true; repaint(); }
+                public void mouseExited(java.awt.event.MouseEvent e) { hover = false; repaint(); }
+            });
+        }
+        @Override protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            int w = getWidth(), h = getHeight();
+            boolean on = isEnabled();
+            if (primary) {
+                g2.setColor(!on ? new Color(255, 255, 255, 45) : hover ? Color.WHITE : new Color(0xE6E6F0));
+                g2.fillRoundRect(0, 0, w, h, 10, 10);
+                g2.setColor(on ? BG_TOP : new Color(255, 255, 255, 110));
+            } else {
+                g2.setColor(hover && on ? new Color(255, 255, 255, 28) : new Color(0, 0, 0, 0));
+                g2.fillRoundRect(0, 0, w, h, 10, 10);
+                g2.setColor(on ? new Color(255, 255, 255, 90) : new Color(255, 255, 255, 35));
+                g2.drawRoundRect(0, 0, w - 1, h - 1, 10, 10);
+                g2.setColor(on ? TEXT : new Color(255, 255, 255, 80));
+            }
+            FontMetrics fm = g2.getFontMetrics(getFont());
+            g2.setFont(getFont());
+            g2.drawString(getText(), (w - fm.stringWidth(getText())) / 2, (h - fm.getHeight()) / 2 + fm.getAscent());
+            g2.dispose();
+        }
+    }
+
+    static JLabel label(String text, Font f, Color c) {
+        JLabel l = new JLabel(text);
+        l.setFont(f);
+        l.setForeground(c);
+        return l;
+    }
+
     // ---------- Interfaz ----------
 
+    static Target target;
     static Path gameDir;
-    static JLabel status;
-    static JProgressBar bar;
-    static JButton updateBtn, playBtn;
+    static JLabel status, targetLabel;
+    static Bar bar;
+    static Sigil sigil;
+    static FlatButton updateBtn, playBtn;
+    static JEditorPane news;
     static Plan currentPlan;
+    static Properties settings;
+    static boolean checking;
 
     public static void main(String[] args) throws Exception {
         if (args.length >= 2 && args[0].equals("--sync")) { headless(Paths.get(args[1])); return; }
-        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception ignored) { }
+        System.setProperty("awt.useSystemAAFontSettings", "on");
         SwingUtilities.invokeLater(Launcher::buildUi);
     }
 
@@ -352,75 +614,165 @@ public class Launcher {
     }
 
     static void buildUi() {
-        Properties settings = loadSettings();
-        gameDir = Paths.get(settings.getProperty("gameDir", defaultGameDir().toString()));
+        loadStyle();
+        settings = loadSettings();
+        setTarget(targetFromSettings(settings, detectTargets()), false);
 
         JFrame f = new JFrame(PACK_NAME + " Launcher");
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        JPanel root = new JPanel(new BorderLayout(10, 10));
-        root.setBorder(new EmptyBorder(16, 16, 16, 16));
+        Image icon = appIcon();
+        if (icon != null) f.setIconImage(icon);
 
-        JLabel title = new JLabel(PACK_NAME);
-        title.setFont(title.getFont().deriveFont(Font.BOLD, 26f));
-        JLabel sub = new JLabel("Launcher " + LAUNCHER_VERSION);
-        sub.setForeground(Color.GRAY);
-        JPanel header = new JPanel(new BorderLayout());
-        header.add(title, BorderLayout.WEST);
-        header.add(sub, BorderLayout.EAST);
-        root.add(header, BorderLayout.NORTH);
+        Backdrop root = new Backdrop(new BorderLayout(24, 0));
+        root.setBorder(new EmptyBorder(22, 22, 22, 26));
 
-        JEditorPane news = new JEditorPane("text/html", "<html><body style='font-family:sans-serif;color:gray'>Cargando noticias…</body></html>");
+        sigil = new Sigil();
+        sigil.setPreferredSize(new Dimension(340, 340));
+        root.add(sigil, BorderLayout.WEST);
+
+        JPanel right = new JPanel(new BorderLayout(0, 12));
+        right.setOpaque(false);
+
+        JPanel header = new JPanel();
+        header.setOpaque(false);
+        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
+        header.add(label(PACK_NAME, gothicBold.deriveFont(60f), Color.WHITE));
+        header.add(label("Modpack · Minecraft 1.21.1 · NeoForge · launcher " + LAUNCHER_VERSION, body.deriveFont(12f), MUTED));
+        right.add(header, BorderLayout.NORTH);
+
+        news = new JEditorPane("text/html", "");
         news.setEditable(false);
+        news.setOpaque(false);
+        news.setBackground(new Color(0, 0, 0, 0));
+        news.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+        news.setFont(body);
+        news.setText(htmlWrap("<p style='color:#9A9AB2'>Cargando novedades…</p>"));
         JScrollPane sp = new JScrollPane(news);
-        sp.setBorder(BorderFactory.createTitledBorder("Novedades"));
-        root.add(sp, BorderLayout.CENTER);
+        sp.setOpaque(false);
+        sp.getViewport().setOpaque(false);
+        sp.setBorder(BorderFactory.createEmptyBorder());
+        JPanel newsBox = new JPanel(new BorderLayout(0, 6));
+        newsBox.setOpaque(false);
+        JLabel newsTitle = label("Novedades", gothicMedium.deriveFont(24f), Color.WHITE);
+        newsTitle.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, LINE), new EmptyBorder(0, 0, 4, 0)));
+        newsBox.add(newsTitle, BorderLayout.NORTH);
+        newsBox.add(sp, BorderLayout.CENTER);
+        right.add(newsBox, BorderLayout.CENTER);
 
-        status = new JLabel("Comprobando actualizaciones…");
-        bar = new JProgressBar(0, 1000);
-        bar.setStringPainted(false);
-        updateBtn = new JButton("Actualizar");
+        status = label("Comprobando actualizaciones…", body.deriveFont(13f), TEXT);
+        bar = new Bar();
+        updateBtn = new FlatButton("Actualizar", true);
+        playBtn = new FlatButton("Jugar", true);
+        FlatButton folderBtn = new FlatButton("Abrir carpeta", false);
         updateBtn.setEnabled(false);
-        playBtn = new JButton("Jugar");
         playBtn.setEnabled(false);
-        JButton folderBtn = new JButton("Abrir carpeta");
-        JButton changeBtn = new JButton("Cambiar carpeta…");
-
-        updateBtn.addActionListener(e -> doUpdate());
+        updateBtn.addActionListener(e -> { if (currentPlan == null) check(); else doUpdate(); });
         playBtn.addActionListener(e -> doPlay());
         folderBtn.addActionListener(e -> {
             try { Files.createDirectories(gameDir); Desktop.getDesktop().open(gameDir.toFile()); }
             catch (Exception ex) { error(ex.getMessage()); }
         });
-        changeBtn.addActionListener(e -> {
-            JFileChooser ch = new JFileChooser(gameDir.toFile());
-            ch.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            if (ch.showOpenDialog(f) == JFileChooser.APPROVE_OPTION) {
-                gameDir = ch.getSelectedFile().toPath();
-                settings.setProperty("gameDir", gameDir.toString());
-                saveSettings(settings);
-                check(news);
-            }
-        });
 
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-        buttons.add(changeBtn);
+        targetLabel = label("", body.deriveFont(12f), MUTED);
+        targetLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        targetLabel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent e) { showTargetMenu(f, targetLabel); }
+        });
+        refreshTargetLabel();
+        targetLabel.setBorder(new EmptyBorder(6, 0, 0, 0));
+        header.add(targetLabel);
+
+        JPanel statusRow = new JPanel(new BorderLayout());
+        statusRow.setOpaque(false);
+        statusRow.add(status, BorderLayout.WEST);
+
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        buttons.setOpaque(false);
         buttons.add(folderBtn);
         buttons.add(updateBtn);
         buttons.add(playBtn);
-        JPanel bottom = new JPanel(new BorderLayout(6, 6));
-        bottom.add(status, BorderLayout.NORTH);
-        bottom.add(bar, BorderLayout.CENTER);
-        bottom.add(buttons, BorderLayout.SOUTH);
-        root.add(bottom, BorderLayout.SOUTH);
 
+        JPanel actionRow = new JPanel(new BorderLayout());
+        actionRow.setOpaque(false);
+        actionRow.add(buttons, BorderLayout.EAST);
+
+        JPanel bottom = new JPanel(new BorderLayout(0, 10));
+        bottom.setOpaque(false);
+        bottom.add(statusRow, BorderLayout.NORTH);
+        bottom.add(bar, BorderLayout.CENTER);
+        bottom.add(actionRow, BorderLayout.SOUTH);
+        right.add(bottom, BorderLayout.SOUTH);
+
+        root.add(right, BorderLayout.CENTER);
         f.setContentPane(root);
-        f.setSize(640, 440);
+        f.setSize(940, 520);
+        f.setMinimumSize(new Dimension(820, 460));
         f.setLocationRelativeTo(null);
         f.setVisible(true);
-        check(news);
+        check();
     }
 
-    static void check(JEditorPane news) {
+    static String htmlWrap(String inner) {
+        return "<html><body style='font-family:\"" + body.getFamily() + "\";font-size:11px;color:#ECECF4;margin:0'>" + inner + "</body></html>";
+    }
+
+    static void setTarget(Target t, boolean save) {
+        target = t;
+        gameDir = t.dir();
+        if (save) {
+            settings.setProperty("targetKind", t.kind().name());
+            settings.setProperty("targetDir", t.dir().toString());
+            saveSettings(settings);
+        }
+    }
+
+    static void refreshTargetLabel() {
+        targetLabel.setText("<html>Instalar en: <u>" + esc(target.label()) + "</u> ▾</html>");
+    }
+
+    static void showTargetMenu(Component parent, JComponent anchor) {
+        JPopupMenu menu = new JPopupMenu();
+        List<Target> list = detectTargets();
+        for (Target t : list) {
+            JMenuItem it = new JMenuItem((t.equals(target) ? "✓ " : "   ") + t.label());
+            it.setFont(body);
+            it.addActionListener(e -> chooseTarget(t));
+            menu.add(it);
+        }
+        if (list.stream().noneMatch(t -> t.kind() == Kind.MODRINTH))
+            menu.add(disabledItem("   (Modrinth: crea un perfil NeoForge 1.21.1 y vuelve a abrir esto)"));
+        menu.addSeparator();
+        JMenuItem other = new JMenuItem("   Otra carpeta…");
+        other.setFont(body);
+        other.addActionListener(e -> {
+            JFileChooser ch = new JFileChooser(gameDir.toFile());
+            ch.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            if (ch.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION) {
+                Path p = ch.getSelectedFile().toPath();
+                chooseTarget(new Target(Kind.CUSTOM, p.toString(), p, null));
+            }
+        });
+        menu.add(other);
+        menu.show(anchor, 0, anchor.getHeight());
+    }
+
+    static JMenuItem disabledItem(String text) {
+        JMenuItem i = new JMenuItem(text);
+        i.setFont(body.deriveFont(11f));
+        i.setEnabled(false);
+        return i;
+    }
+
+    static void chooseTarget(Target t) {
+        setTarget(t, true);
+        refreshTargetLabel();
+        check();
+    }
+
+    static void check() {
+        if (checking) return;
+        checking = true;
+        currentPlan = null;
         updateBtn.setEnabled(false);
         playBtn.setEnabled(false);
         status.setText("Comprobando actualizaciones…");
@@ -433,18 +785,19 @@ public class Launcher {
                 return plan(gameDir, m);
             }
             protected void done() {
+                checking = false;
                 try {
                     currentPlan = get();
                     news.setText(html);
                     news.setCaretPosition(0);
                     if (currentPlan.upToDate()) {
                         status.setText("Todo al día · versión " + currentPlan.manifest().version());
-                        bar.setValue(1000);
+                        bar.set(1);
                         playBtn.setEnabled(true);
                     } else {
-                        status.setText("Hay una actualización: " + currentPlan.downloads().size() + " archivo(s), "
-                                + mb(currentPlan.bytes()) + (currentPlan.deletions().isEmpty() ? "" : ", " + currentPlan.deletions().size() + " a quitar"));
-                        bar.setValue(0);
+                        status.setText("Actualización disponible · " + currentPlan.downloads().size() + " archivo(s), "
+                                + mb(currentPlan.bytes()));
+                        bar.set(0);
                         updateBtn.setEnabled(true);
                     }
                     if (launcherUrl != null) {
@@ -456,32 +809,39 @@ public class Launcher {
                     status.setText("No se pudo comprobar. ¿Tienes internet?");
                     updateBtn.setText("Reintentar");
                     updateBtn.setEnabled(true);
-                    for (var l : updateBtn.getActionListeners()) updateBtn.removeActionListener(l);
-                    updateBtn.addActionListener(ev -> {
-                        for (var l : updateBtn.getActionListeners()) updateBtn.removeActionListener(l);
-                        updateBtn.setText("Actualizar");
-                        updateBtn.addActionListener(x -> doUpdate());
-                        check(news);
-                    });
                 }
             }
         }.execute();
     }
 
     static void doUpdate() {
+        List<Path> del = currentPlan.deletions();
+        if (!del.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < Math.min(8, del.size()); i++) sb.append("\n  • ").append(del.get(i).getFileName());
+            if (del.size() > 8) sb.append("\n  … y ").append(del.size() - 8).append(" más");
+            int r = JOptionPane.showConfirmDialog(null, "En " + target.label() + " hay " + del.size()
+                            + " mod(s) que no son del modpack y se quitarán:" + sb + "\n\n¿Continuar?",
+                    PACK_NAME, JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+            if (r != JOptionPane.OK_OPTION) return;
+        }
+        updateBtn.setText("Actualizar");
         updateBtn.setEnabled(false);
+        sigil.spin(true);
         new SwingWorker<Void, Void>() {
             protected Void doInBackground() throws Exception {
                 apply(gameDir, currentPlan, (text, frac) -> SwingUtilities.invokeLater(() -> {
                     status.setText(text);
-                    bar.setValue((int) (frac * 1000));
+                    bar.set(frac);
                 }));
                 return null;
             }
             protected void done() {
+                sigil.spin(false);
                 try {
                     get();
                     status.setText("Todo al día · versión " + currentPlan.manifest().version());
+                    bar.set(1);
                     playBtn.setEnabled(true);
                 } catch (Exception e) {
                     Throwable c = e.getCause() != null ? e.getCause() : e;
@@ -494,6 +854,23 @@ public class Launcher {
     }
 
     static void doPlay() {
+        switch (target.kind()) {
+            case MODRINTH -> {
+                boolean ok = openModrinth();
+                status.setText(ok ? "Abriendo Modrinth… dale a Jugar en el perfil \"" + target.name() + "\"."
+                        : "Abre Modrinth y dale a Jugar en el perfil \"" + target.name() + "\".");
+            }
+            case PRISM -> {
+                if (launchPrism(target.instanceId())) status.setText("Iniciando " + target.name() + " con Prism…");
+                else status.setText("Abre Prism y dale a Jugar en \"" + target.name() + "\".");
+            }
+            case CUSTOM -> JOptionPane.showMessageDialog(null, "Modpack listo en:\n" + gameDir
+                    + "\n\nAbre tu launcher y juega con la instancia que usa esa carpeta.", PACK_NAME, JOptionPane.INFORMATION_MESSAGE);
+            case OFFICIAL -> playOfficial();
+        }
+    }
+
+    static void playOfficial() {
         String res = ensureProfile(gameDir, currentPlan.manifest().minecraft());
         if ("NEOFORGE".equals(res)) {
             int r = JOptionPane.showConfirmDialog(null,
