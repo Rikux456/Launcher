@@ -32,6 +32,8 @@ public class Launcher {
     static final String RAM = "-Xmx4G";                  // memoria para el perfil de Minecraft
     // ===========================
 
+    /** Solo para pruebas: -Dlauncher.raw=http://localhost:8000 */
+    static final String RAW_BASE = System.getProperty("launcher.raw", "https://raw.githubusercontent.com/" + REPO);
     static final String PROFILE_ID = PACK_NAME.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "") + "-launcher";
     static final HttpClient HTTP = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.NORMAL)
@@ -92,7 +94,7 @@ public class Launcher {
     }
 
     static String rawUrl(String commit, String path) {
-        StringBuilder sb = new StringBuilder("https://raw.githubusercontent.com/").append(REPO).append('/').append(commit);
+        StringBuilder sb = new StringBuilder(RAW_BASE).append('/').append(commit);
         for (String seg : ("modpack/" + path).split("/"))
             sb.append('/').append(URLEncoder.encode(seg, StandardCharsets.UTF_8).replace("+", "%20"));
         return sb.toString();
@@ -101,7 +103,7 @@ public class Launcher {
     @SuppressWarnings("unchecked")
     static Manifest fetchManifest() throws Exception {
         String commit = latestCommit();
-        String url = "https://raw.githubusercontent.com/" + REPO + "/" + commit + "/manifest.json";
+        String url = RAW_BASE + "/" + commit + "/manifest.json";
         Map<String, Object> m = (Map<String, Object>) Json.parse(getText(url));
         List<PackFile> files = new ArrayList<>();
         for (Object o : (List<Object>) m.get("files")) {
@@ -299,7 +301,7 @@ public class Launcher {
     @SuppressWarnings("unchecked")
     static String newsHtml(String commit) {
         try {
-            Object parsed = Json.parse(getText("https://raw.githubusercontent.com/" + REPO + "/" + commit + "/news.json"));
+            Object parsed = Json.parse(getText(RAW_BASE + "/" + commit + "/news.json"));
             StringBuilder sb = new StringBuilder("<html><body style='font-family:sans-serif;font-size:11px;'>");
             for (Object o : (List<Object>) parsed) {
                 Map<String, Object> n = (Map<String, Object>) o;
