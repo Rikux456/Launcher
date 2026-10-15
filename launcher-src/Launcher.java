@@ -437,9 +437,50 @@ public class Launcher {
         return tryStart("ModrinthApp") || tryStart("modrinth-app");
     }
 
-    /** Modrinth App arranca un perfil con el enlace modrinth://launch/instance/<carpeta del perfil>. */
+    /**
+     * Identificador interno de un perfil de Modrinth App.
+     * Desde 2026 Modrinth guarda las instancias en app.db (SQLite) con un id tipo "local:<uuid>";
+     * en versiones anteriores el id era el nombre de la carpeta.
+     * Devuelve null si no se puede averiguar.
+     */
+    static String modrinthInstanceId(Path profileDir) {
+        String folder = profileDir.getFileName().toString();
+        Path appDir = profileDir.getParent() != null ? profileDir.getParent().getParent() : null;
+        if (appDir == null || !Files.exists(appDir.resolve("app.db"))) return folder;
+        Path tmp = null;
+        try {
+            Class.forName("org.sqlite.JDBC");
+            // Copia de la base de datos (y su WAL) para no interferir con Modrinth mientras está abierto
+            tmp = Files.createTempDirectory("mrdb");
+            Files.copy(appDir.resolve("app.db"), tmp.resolve("app.db"));
+            if (Files.exists(appDir.resolve("app.db-wal"))) Files.copy(appDir.resolve("app.db-wal"), tmp.resolve("app.db-wal"));
+            try (java.sql.Connection c = java.sql.DriverManager.getConnection("jdbc:sqlite:" + tmp.resolve("app.db"))) {
+                boolean hasTable;
+                try (var rs = c.getMetaData().getTables(null, null, "instances", null)) { hasTable = rs.next(); }
+                if (!hasTable) return folder; // Modrinth antiguo
+                try (var st = c.prepareStatement("SELECT id, path FROM instances");
+                     var rs = st.executeQuery()) {
+                    while (rs.next()) {
+                        String path = rs.getString(2).replace('\\', '/');
+                        if (path.equals(folder) || path.endsWith("/" + folder)) return rs.getString(1);
+                    }
+                }
+            }
+            return null;
+        } catch (Throwable e) {
+            return null;
+        } finally {
+            if (tmp != null) try (var w = Files.walk(tmp)) {
+                w.sorted(Comparator.reverseOrder()).forEach(x -> { try { Files.deleteIfExists(x); } catch (IOException ignored) { } });
+            } catch (IOException ignored) { }
+        }
+    }
+
+    /** Modrinth App arranca un perfil con el enlace modrinth://launch/instance/<id>. */
     static boolean launchModrinth(Target t) {
-        String id = URLEncoder.encode(t.dir().getFileName().toString(), StandardCharsets.UTF_8).replace("+", "%20");
+        String rawId = modrinthInstanceId(t.dir());
+        if (rawId == null) return false;
+        String id = URLEncoder.encode(rawId, StandardCharsets.UTF_8).replace("+", "%20");
         URI uri = URI.create("modrinth://launch/instance/" + id);
         try {
             if (isWindows()) { new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", uri.toString()).start(); return true; }

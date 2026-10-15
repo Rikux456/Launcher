@@ -38,18 +38,7 @@ jobs:
       - name: Compilar
         shell: bash
         run: |
-          mkdir -p build/classes dist
-          javac -encoding UTF-8 -d build/classes launcher-src/Launcher.java
-          printf "Main-Class: Launcher\n" > build/manifest.txt
-          jar cfm dist/Derisomod-Launcher.jar build/manifest.txt -C build/classes . -C launcher-src/resources .
-      - name: Crear .exe con Java incluido
-        shell: bash
-        run: |
-          VERSION="${{ steps.ver.outputs.version }}"
-          jpackage --type app-image --name "Derisomod Launcher" --app-version "$VERSION" \
-            --input dist --main-jar Derisomod-Launcher.jar --main-class Launcher --icon launcher-src/icon.ico \
-            --add-modules java.se,jdk.crypto.ec,jdk.zipfs,jdk.unsupported,jdk.charsets,jdk.localedata \
-            --jlink-options "--strip-debug --no-man-pages --no-header-files" --dest build/app
+          .github/scripts/build-launcher.sh "${{ steps.ver.outputs.version }}"
           cd build/app && 7z a ../../dist/Derisomod-Launcher-Windows.zip "Derisomod Launcher"
       - name: Publicar release
         if: steps.ver.outputs.exists == 'false'
