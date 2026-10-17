@@ -3,20 +3,20 @@
   "minecraft": "1.21.1",
   "loader": "neoforge",
   "neoforge": "21.1.262",
-  "version": "5fc32e37",
+  "version": "b0454130",
   "mirrorDirs": [
     "mods"
   ],
   "files": [
     {
       "path": "config/derisomod-client.toml",
-      "sha1": "e19638bcaf204ef8989b1440751559fd8041df7c",
-      "size": 2478
+      "sha1": "2e578b527d9235511523a03e3b823b13f9eaf960",
+      "size": 2246
     },
     {
       "path": "config/derisomod-server.toml",
-      "sha1": "1c7ec971966dfbec129f3d1dff2072d3d5a6c577",
-      "size": 37743
+      "sha1": "12730db339cd969d2e8f1ce7c2bba7f7f044be9f",
+      "size": 40754
     },
     {
       "path": "config/derisomod_characters-server.toml",
@@ -29,9 +29,19 @@
       "size": 92
     },
     {
+      "path": "config/derisomod_ylvia-client.toml",
+      "sha1": "d98a6cc916167954cbc6de51df209c5e79f0ae97",
+      "size": 334
+    },
+    {
       "path": "config/fml.toml",
       "sha1": "9fca24533100755c12e7d1a82f8c524d0a163ff6",
       "size": 1550
+    },
+    {
+      "path": "config/iris.properties",
+      "sha1": "c0646ecaa1df34c7202edd55344780022cf3a5cd",
+      "size": 316
     },
     {
       "path": "config/levelmod-client.toml",
@@ -50,8 +60,8 @@
     },
     {
       "path": "config/neoforge-common.toml",
-      "sha1": "6b10e4debbf06a33453f4e0ffb80281ff0752f9f",
-      "size": 772
+      "sha1": "2e904b9a9bf2c03e8dfe4d0b3b43dee9965c062b",
+      "size": 1050
     },
     {
       "path": "config/neoforge-server.toml",
@@ -64,14 +74,24 @@
       "size": 77555
     },
     {
-      "path": "mods/derisomod-2.10.jar",
-      "sha1": "55461e66d04bfdca776c1a2211f65a7af7074452",
-      "size": 7797967
+      "path": "mods/derisomod-2.31.jar",
+      "sha1": "fe52e735d2ed7fd04098db5139e9b0a949869f06",
+      "size": 7921665
     },
     {
-      "path": "mods/derisomod_characters-0.18.0.jar",
-      "sha1": "309c620c73406a66006cb6effbebf69e76e78b9f",
-      "size": 868235
+      "path": "mods/derisomod_characters-0.29.0.jar",
+      "sha1": "fdb91d754f66380621da21fff9d1ec1668bde254",
+      "size": 2325299
+    },
+    {
+      "path": "mods/derisomod_roguelike-0.5.0.jar",
+      "sha1": "8fe6623ca93dc06ec04413d27735f9cfec5bfb92",
+      "size": 115161
+    },
+    {
+      "path": "mods/derisomod_ylvia-0.12.0.jar",
+      "sha1": "0055fbdcda117dcf43b9c933ae6bc7101fec5adb",
+      "size": 6431112
     },
     {
       "path": "mods/Essential_1-5-0-1_neoforge_1-21-1.jar",
@@ -84,6 +104,16 @@
       "size": 634531
     },
     {
+      "path": "mods/iris-neoforge-1.8.14-beta.1+mc1.21.1.jar",
+      "sha1": "1bd129cf7bce65d6b1c0543045f0620c98a0f885",
+      "size": 2540723
+    },
+    {
+      "path": "mods/journeymap-neoforge-1.21.1-6.0.9.jar",
+      "sha1": "3a5c86e620a7d5aa53b6e42ca4a1577bbba1d332",
+      "size": 4320499
+    },
+    {
       "path": "mods/player-animation-lib-forge-2.0.4+1.21.1.jar",
       "sha1": "05be8ddcc78532b9a5520c718edc6c971cd0057c",
       "size": 203149
@@ -94,9 +124,19 @@
       "size": 77326
     },
     {
+      "path": "mods/sodium-neoforge-0.8.13+mc1.21.1.jar",
+      "sha1": "1757289be21ed18db5b0d90703fa3db1b2de5693",
+      "size": 1292934
+    },
+    {
       "path": "mods/veil-neoforge-1.21.1-4.5.2.jar",
       "sha1": "b9994fd16bac1f78633e17b69ea04b76c0f2654f",
       "size": 3402614
+    },
+    {
+      "path": "shaderpacks/ComplementaryReimagined_r5.9.3.zip",
+      "sha1": "838139b54cddb56b2e83cd260d8efd960ac536d6",
+      "size": 553397
     }
   ]
 }
