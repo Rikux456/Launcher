@@ -40,9 +40,6 @@ afterImages = true
 # Default: 1.0
 # Range: 0.1 ~ 1.0
 scyllaMusicVolume = 1.0
-#Jugadores quietos: idle mas vivo (respiran, codos y rodillas relajados, cambian el peso de pierna,
-#miran alrededor) y pose de herido con poca vida. Necesita playerAnimator. Afecta a como ves a todos.
-playerIdleAnimation = true
 #Ojos que se mueven en las skins de todos los jugadores (parpadean, miran a quien tienen cerca,
 #cierran los ojos al recibir un golpe...). Usa los ojos de la propia skin; si no los encuentra, nada.
 movingEyes = true

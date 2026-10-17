@@ -192,6 +192,14 @@
 	# Default: 3.0
 	# Range: 1.0 ~ 20.0
 	parryThresholdMultiplierImproved = 3.0
+	#Dentro de La Zona los hechizos cargan (y sobrecargan) este % mas rapido (40 = 1,4 veces)
+	# Default: 40.0
+	# Range: 0.0 ~ 1000.0
+	spellChargeSpeedPercent = 40.0
+	#Lo mismo en La Zona verdadera (nivel 2)
+	# Default: 60.0
+	# Range: 0.0 ~ 1000.0
+	spellChargeSpeedPercentImproved = 60.0
 
 	#La Zona por instinto: se puede activar sola con poca vida y un mob hostil cerca.
 	#Antes de aprenderla: nivel 1, dura menos y no se puede cortar. Tras activarse sola unas veces aparece
@@ -256,8 +264,8 @@
 	staminaCost = 3.0
 
 #Hechizos (tecla G lanza el elegido en la rueda; manten C para la rueda). Gastan mana.
-#El dano se multiplica por la proficiencia del elemento: de proficiencyMinMultiplier (0 %) a proficiencyMaxMultiplier (100 %).
-#Con 50 % (el elemento de origen) el multiplicador es la media de los dos.
+#El dano se multiplica por la proficiencia del elemento: de proficiencyMinMultiplier (0 %) a proficiencyMaxMultiplier (100 %);
+#por encima del 100 % sigue subiendo a la mitad de ritmo (sin tope). El elemento de origen empieza en 30 %.
 [spells]
 	#Mana que se recupera por segundo, en % del mana maximo (5 = se llena en 20 s)
 	# Default: 5.0
@@ -286,6 +294,27 @@
 	# Default: 30
 	# Range: 0 ~ 100
 	combineProficiency = 30
+	#Dano de los hechizos y del cuerpo a cuerpo contra mobs: +este % por cada nivel por encima del 1 (3 = nivel 100 hace x3,97)
+	# Default: 3.0
+	# Range: 0.0 ~ 100.0
+	damagePercentPerLevel = 3.0
+	#Dano de los hechizos contra mobs: +este % por cada punto de Inteligencia (se multiplica con el del nivel)
+	# Default: 1.5
+	# Range: 0.0 ~ 100.0
+	damagePercentPerIntelligence = 1.5
+	#Puntos de habilidad para aprender en el arbol un hechizo base de otro elemento (el de tu origen es gratis)
+	# Default: 5
+	# Range: 0 ~ 1000
+	treeCostBase = 5
+	#Puntos de habilidad para aprender en el arbol un hechizo combinado (antes hay que crearlo en la pestana Elementos)
+	# Default: 10
+	# Range: 0 ~ 1000
+	treeCostCombo = 10
+	#Reacciones en el mundo (p. ej. Tajo de viento en la cupula de fuego): proficiencia (%) que necesita el que la
+	#provoca en el elemento del hechizo que ya estaba (el suyo o el de un aliado)
+	# Default: 15
+	# Range: 0 ~ 1000
+	reactProficiency = 15
 
 	#Carga y sobrecarga: con el hechizo en la mano, manten click derecho. Si sueltas antes de chargeTicks no sale
 	#nada (ni gasta mana). Con la carga completa, tras overchargeDelayTicks empieza la sobrecarga, que tarda
@@ -1027,3 +1056,41 @@
 		# Default: 1.0
 		# Range: 0.0 ~ 100.0
 		waterTornadoHeal = 1.0
+
+#XP del mod (1.90): aparte de la vanilla. Se gana matando mobs hostiles y se gasta en el libro (cada stat
+#subido = un nivel; coste del nivel N al N+1 = 20 + 4*N + 0,05*N^2, ver XpMath).
+[mod_xp]
+	#XP por cada punto de vida maxima del mob (zombi: 20 de vida -> 50 XP)
+	# Default: 2.5
+	# Range: 0.0 ~ 1000.0
+	xpPerHealth = 2.5
+	#Multiplicador de XP de los mobs peligrosos (dano de ataque >= dangerAttackDamage, o creeper, ghast, bruja, evocador)
+	# Default: 1.5
+	# Range: 1.0 ~ 100.0
+	dangerMultiplier = 1.5
+	#Dano de ataque a partir del cual un mob cuenta como peligroso
+	# Default: 6.0
+	# Range: 0.0 ~ 1000.0
+	dangerAttackDamage = 6.0
+	#Extra por matarlo con poca vida: x (1 + esto * (1 - tu vida / tu vida maxima)). 0,5 = hasta +50 %
+	# Default: 0.5
+	# Range: 0.0 ~ 10.0
+	lowHealthBonus = 0.5
+	#Si el mob muere por otra cosa (caida, fuego...) cuenta como tuyo si le pegaste en los ultimos estos ticks
+	# Default: 60
+	# Range: 0 ~ 1200
+	killCreditTicks = 60
+	#Repetir el mismo tipo de mob da menos XP (por jugador, no se recupera): a partir de la muerte n.o
+	#(este numero + 1) de un tipo se aplica el siguiente multiplicador de repeatMultipliers
+	repeatSteps = [10, 25, 50, 100]
+	#Multiplicador de XP en cada tramo (uno mas que repeatSteps): 1-10: 100 %, 11-25: 85 %, 26-50: 70 %,
+	#51-100: 55 %, 101+: 40 % (nunca 0)
+	repeatMultipliers = [1.0, 0.85, 0.7, 0.55, 0.4]
+	#Proficiencia: lanzamientos de un elemento para subir un 1 % = castsBase + proficiencia / castsDivisor
+	#(20 y 4: de 0 a 100 % son 3.200 lanzamientos). Un hechizo combinado entrena los dos elementos
+	# Default: 20
+	# Range: 1 ~ 10000
+	castsBase = 20
+	# Default: 4
+	# Range: 1 ~ 10000
+	castsDivisor = 4

@@ -1,0 +1,6 @@
+#Ambiente de la capital de Draksun con Veil: gris de dia, negro de noche y niebla baja.
+#Se apaga solo si hay un shaderpack (Iris/Oculus) activo.
+ambienteCapital = true
+#Calidad de la niebla baja de la capital: BAJA, MEDIA o ALTA (mas fina). Si va lento en la ciudad, bajala.
+#Allowed Values: BAJA, MEDIA, ALTA
+calidad = "ALTA"
