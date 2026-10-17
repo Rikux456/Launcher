@@ -28,6 +28,10 @@ Los mods de esa instancia quedan idénticos a los del modpack: si hay otros mods
 | Cambiar una config | Sube el archivo a `modpack/config/` |
 | Publicar una noticia | Edita `news.json` |
 
+**Desde el repositorio del mod** (`Deriso-Mod/Deriso`): `publicar-launcher.bat` compila el Derisomod y Characters,
+copia los jar a `modpack/mods/` quitando las versiones viejas y lo sube. Con un texto (`publicar-launcher.bat "Novedades..."`)
+añade también una noticia.
+
 `manifest.json` se regenera solo (GitHub Action *Actualizar manifest*). No hace falta tocarlo.
 
 **Archivos de más de 25 MB** (como Essential): la web de GitHub no deja subirlos arrastrando.
