@@ -3,7 +3,7 @@
   "minecraft": "1.21.1",
   "loader": "neoforge",
   "neoforge": "21.1.262",
-  "version": "7ab5d680",
+  "version": "d4b79575",
   "mirrorDirs": [
     "mods"
   ],
@@ -40,8 +40,8 @@
     },
     {
       "path": "config/iris.properties",
-      "sha1": "c0646ecaa1df34c7202edd55344780022cf3a5cd",
-      "size": 316
+      "sha1": "825a14beb6dce87f102ecd4e7ed3065285809763",
+      "size": 298
     },
     {
       "path": "config/levelmod-client.toml",
@@ -137,6 +137,11 @@
       "path": "shaderpacks/ComplementaryReimagined_r5.9.3.zip",
       "sha1": "838139b54cddb56b2e83cd260d8efd960ac536d6",
       "size": 553397
+    },
+    {
+      "path": "shaderpacks/Ylvia-Shaders.zip",
+      "sha1": "fbdfbdf3a2bf3b234670952411f4beced1e83b33",
+      "size": 521890
     }
   ]
 }
