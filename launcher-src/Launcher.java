@@ -28,7 +28,7 @@ public class Launcher {
     static final String PACK_NAME = "Derisomod";
     static final String REPO = "Rikux456/Launcher";      // usuario/repositorio de GitHub
     static final String BRANCH = "main";
-    static final String LAUNCHER_VERSION = "1.3.1";     // súbelo al publicar un launcher nuevo
+    static final String LAUNCHER_VERSION = "1.4.0";     // súbelo al publicar un launcher nuevo
     static final String RAM = "-Xmx4G";                  // memoria para el perfil de Minecraft
     // ===========================
 
