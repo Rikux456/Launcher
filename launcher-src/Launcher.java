@@ -83,42 +83,24 @@ public class Launcher {
         return r.body();
     }
 
-    /**
-     * Último commit que cambió manifest.json. En ese commit el manifest y los archivos coinciden siempre
-     * (justo después de publicar, hasta que la Action regenera el manifest, se sigue usando el anterior,
-     * que es coherente con sus archivos), y al pedir por commit nunca llega nada de una caché vieja.
-     */
-    @SuppressWarnings("unchecked")
-    static String latestCommit() {
-        try {
-            HttpRequest req = HttpRequest.newBuilder(URI.create(API_BASE + "/commits?path=manifest.json&per_page=1&sha=" + BRANCH))
-                    .timeout(Duration.ofSeconds(15))
-                    .header("Accept", "application/vnd.github+json")
-                    .header("User-Agent", PACK_NAME + "-Launcher").build();
-            HttpResponse<String> r = HTTP.send(req, HttpResponse.BodyHandlers.ofString());
-            if (r.statusCode() == 200) {
-                List<Object> list = (List<Object>) Json.parse(r.body());
-                if (!list.isEmpty()) {
-                    String sha = String.valueOf(((Map<String, Object>) list.get(0)).get("sha"));
-                    if (sha.matches("[0-9a-f]{40}")) return sha;
-                }
-            }
-        } catch (Exception ignored) { }
-        return BRANCH; // si la API falla (límite de peticiones), usamos la rama
-    }
-
-    static String rawUrl(String commit, String path) {
-        StringBuilder sb = new StringBuilder(RAW_BASE).append('/').append(commit);
+    static String rawUrl(Manifest m, String path) {
+        StringBuilder sb = new StringBuilder(RAW_BASE).append('/').append(m.commit());
         for (String seg : ("modpack/" + path).split("/"))
             sb.append('/').append(URLEncoder.encode(seg, StandardCharsets.UTF_8).replace("+", "%20"));
+        if (m.commit().equals(BRANCH)) sb.append("?v=").append(m.version()); // manifest antiguo sin commit
         return sb.toString();
     }
 
     @SuppressWarnings("unchecked")
     static Manifest fetchManifest() throws Exception {
-        String commit = latestCommit();
-        String url = RAW_BASE + "/" + commit + "/manifest.json";
+        // El manifest se lee de la rama, con un parámetro distinto cada vez para saltarse la caché de 5 min
+        // de GitHub, y SIN la API (que sin cuenta solo deja 60 consultas por hora).
+        // Dentro trae "commit": la publicación de la que salió; los archivos se bajan de ese commit,
+        // así que siempre coinciden con el manifest aunque justo se esté publicando otra versión.
+        String url = RAW_BASE + "/" + BRANCH + "/manifest.json?t=" + System.currentTimeMillis();
         Map<String, Object> m = (Map<String, Object>) Json.parse(getText(url));
+        Object c = m.get("commit");
+        String commit = c != null && c.toString().matches("[0-9a-f]{40}") ? c.toString() : BRANCH;
         List<PackFile> files = new ArrayList<>();
         for (Object o : (List<Object>) m.get("files")) {
             Map<String, Object> f = (Map<String, Object>) o;
@@ -206,7 +188,7 @@ public class Launcher {
             Path target = safeResolve(gameDir, f.path());
             Files.createDirectories(target.getParent());
             Path tmp = target.resolveSibling(target.getFileName() + ".part");
-            HttpRequest req = HttpRequest.newBuilder(URI.create(rawUrl(plan.manifest().commit(), f.path())))
+            HttpRequest req = HttpRequest.newBuilder(URI.create(rawUrl(plan.manifest(), f.path())))
                     .header("User-Agent", PACK_NAME + "-Launcher/" + LAUNCHER_VERSION).build();
             HttpResponse<InputStream> r = HTTP.send(req, HttpResponse.BodyHandlers.ofInputStream());
             if (r.statusCode() != 200) throw new IOException("No se pudo descargar " + f.path() + " (HTTP " + r.statusCode() + ")");
@@ -1153,7 +1135,7 @@ public class Launcher {
             protected Plan doInBackground() throws Exception {
                 Manifest m = fetchManifest();
                 html = newsHtml();
-                rel = newerLauncher();
+                if (!quiet) rel = newerLauncher();   // única consulta a la API: al abrir y con Comprobar
                 return plan(gameDir, m);
             }
             protected void done() {

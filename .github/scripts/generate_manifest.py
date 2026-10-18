@@ -27,6 +27,8 @@ manifest = {
     "neoforge": NEOFORGE,
     "version": version,
     "mirrorDirs": MIRROR_DIRS,
+    # Commit del que salen estos archivos: el launcher los descarga de ahí (en la Action, el que se publicó)
+    **({"commit": os.environ["GITHUB_SHA"]} if os.environ.get("GITHUB_SHA") else {}),
     "files": files,
 }
 with open("manifest.json", "w", encoding="utf-8") as fh:
