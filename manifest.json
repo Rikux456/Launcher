@@ -7,6 +7,7 @@
   "mirrorDirs": [
     "mods"
   ],
+  "commit": "4c85356aeece6f97b6ed4653e5109299ee28a249",
   "files": [
     {
       "path": "config/derisomod-client.toml",
