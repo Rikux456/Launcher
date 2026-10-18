@@ -34,6 +34,10 @@ public class Launcher {
 
     /** Solo para pruebas: -Dlauncher.raw=http://localhost:8000 */
     static final String RAW_BASE = System.getProperty("launcher.raw", "https://raw.githubusercontent.com/" + REPO);
+    /** Solo para pruebas: -Dlauncher.api=http://localhost:8000 */
+    static final String API_BASE = System.getProperty("launcher.api", "https://api.github.com/repos/" + REPO);
+    /** Carpeta del arrancador (Bootstrap); si es null, el launcher no se puede actualizar solo. */
+    static final Path APP_DIR = System.getProperty("derisomod.appdir") != null ? Paths.get(System.getProperty("derisomod.appdir")) : null;
     static final String PROFILE_ID = PACK_NAME.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "") + "-launcher";
     static final HttpClient HTTP = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.NORMAL)
@@ -79,16 +83,26 @@ public class Launcher {
         return r.body();
     }
 
-    /** Commit más reciente de la rama: así los archivos nunca llegan desde una caché vieja. */
+    /**
+     * Último commit que cambió manifest.json. En ese commit el manifest y los archivos coinciden siempre
+     * (justo después de publicar, hasta que la Action regenera el manifest, se sigue usando el anterior,
+     * que es coherente con sus archivos), y al pedir por commit nunca llega nada de una caché vieja.
+     */
+    @SuppressWarnings("unchecked")
     static String latestCommit() {
         try {
-            HttpRequest req = HttpRequest.newBuilder(URI.create("https://api.github.com/repos/" + REPO + "/commits/" + BRANCH))
+            HttpRequest req = HttpRequest.newBuilder(URI.create(API_BASE + "/commits?path=manifest.json&per_page=1&sha=" + BRANCH))
                     .timeout(Duration.ofSeconds(15))
-                    .header("Accept", "application/vnd.github.sha")
+                    .header("Accept", "application/vnd.github+json")
                     .header("User-Agent", PACK_NAME + "-Launcher").build();
             HttpResponse<String> r = HTTP.send(req, HttpResponse.BodyHandlers.ofString());
-            String sha = r.body().trim();
-            if (r.statusCode() == 200 && sha.matches("[0-9a-f]{40}")) return sha;
+            if (r.statusCode() == 200) {
+                List<Object> list = (List<Object>) Json.parse(r.body());
+                if (!list.isEmpty()) {
+                    String sha = String.valueOf(((Map<String, Object>) list.get(0)).get("sha"));
+                    if (sha.matches("[0-9a-f]{40}")) return sha;
+                }
+            }
         } catch (Exception ignored) { }
         return BRANCH; // si la API falla (límite de peticiones), usamos la rama
     }
@@ -325,9 +339,9 @@ public class Launcher {
     // ---------- Noticias y versión del launcher ----------
 
     @SuppressWarnings("unchecked")
-    static String newsHtml(String commit) {
+    static String newsHtml() {
         try {
-            Object parsed = Json.parse(getText(RAW_BASE + "/" + commit + "/news.json"));
+            Object parsed = Json.parse(getText(RAW_BASE + "/" + BRANCH + "/news.json"));
             StringBuilder sb = new StringBuilder();
             for (Object o : (List<Object>) parsed) {
                 Map<String, Object> n = (Map<String, Object>) o;
@@ -344,14 +358,58 @@ public class Launcher {
 
     static String esc(String s) { return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"); }
 
+    record LauncherRelease(String version, String pageUrl, String jarUrl) {}
+
+    /** La release más nueva del launcher, si es más nueva que esta. */
     @SuppressWarnings("unchecked")
-    static String newerLauncherUrl() {
+    static LauncherRelease newerLauncher() {
         try {
-            Map<String, Object> r = (Map<String, Object>) Json.parse(getText("https://api.github.com/repos/" + REPO + "/releases/latest"));
+            Map<String, Object> r = (Map<String, Object>) Json.parse(getText(API_BASE + "/releases/latest"));
             String tag = String.valueOf(r.get("tag_name")).replaceFirst("^[vV]", "");
-            if (compareVersions(tag, LAUNCHER_VERSION) > 0) return String.valueOf(r.get("html_url"));
+            if (compareVersions(tag, LAUNCHER_VERSION) <= 0) return null;
+            String jar = null;
+            Object assets = r.get("assets");
+            if (assets instanceof List<?> l)
+                for (Object o : l) {
+                    Map<String, Object> a = (Map<String, Object>) o;
+                    if ("Derisomod-Launcher.jar".equals(a.get("name"))) jar = String.valueOf(a.get("browser_download_url"));
+                }
+            return new LauncherRelease(tag, String.valueOf(r.get("html_url")), jar);
         } catch (Exception ignored) { }
         return null;
+    }
+
+    /** ¿Ya está descargada (pendiente de reiniciar) esta versión? */
+    static boolean launcherAlreadyDownloaded(String version) {
+        try {
+            Path v = APP_DIR.resolve("launcher-new.version");
+            return Files.exists(v) && Files.exists(APP_DIR.resolve("launcher-new.jar")) && Files.readString(v).trim().equals(version);
+        } catch (Exception e) { return false; }
+    }
+
+    /** Descarga el launcher nuevo junto al arrancador; se usará al abrirlo otra vez. */
+    static void downloadLauncher(LauncherRelease rel) throws Exception {
+        Files.createDirectories(APP_DIR);
+        Path part = APP_DIR.resolve("launcher-new.jar.part");
+        HttpRequest req = HttpRequest.newBuilder(URI.create(rel.jarUrl())).header("User-Agent", PACK_NAME + "-Launcher").build();
+        HttpResponse<Path> r = HTTP.send(req, HttpResponse.BodyHandlers.ofFile(part));
+        if (r.statusCode() != 200) throw new IOException("HTTP " + r.statusCode());
+        try (var zip = new java.util.zip.ZipFile(part.toFile())) {
+            if (zip.getEntry("Launcher.class") == null) throw new IOException("El jar descargado no es el launcher");
+        }
+        Files.move(part, APP_DIR.resolve("launcher-new.jar"), StandardCopyOption.REPLACE_EXISTING);
+        Files.writeString(APP_DIR.resolve("launcher-new.version"), rel.version());
+    }
+
+    /** Cierra el launcher y lo vuelve a abrir (el arrancador cogerá la versión nueva). */
+    static void restartLauncher() throws IOException {
+        ProcessHandle.Info info = ProcessHandle.current().info();
+        String cmd = info.command().orElseThrow(() -> new IOException("no se sabe cómo reiniciar"));
+        List<String> c = new ArrayList<>();
+        c.add(cmd);
+        info.arguments().ifPresent(a -> c.addAll(Arrays.asList(a)));
+        new ProcessBuilder(c).start();
+        System.exit(0);
     }
 
     // ---------- Destinos: launcher oficial, Modrinth, Prism ----------
@@ -772,8 +830,15 @@ public class Launcher {
     static Plan currentPlan;
     static Properties settings;
     static boolean checking;
+    static volatile boolean busy;           // descargando el modpack o creando instancias
+    static FlatButton checkBtn;
+    static String launcherOffered;          // versión del launcher ya avisada en esta sesión
 
     public static void main(String[] args) throws Exception {
+        if (args.length >= 1 && args[0].equals("--version")) {
+            System.out.println(LAUNCHER_VERSION + " desde " + Launcher.class.getProtectionDomain().getCodeSource().getLocation());
+            return;
+        }
         if (args.length >= 2 && args[0].equals("--sync")) { headless(Paths.get(args[1])); return; }
         System.setProperty("awt.useSystemAAFontSettings", "on");
         SwingUtilities.invokeLater(Launcher::buildUi);
@@ -840,6 +905,9 @@ public class Launcher {
         updateBtn = new FlatButton("Actualizar", true);
         playBtn = new FlatButton("Jugar", true);
         FlatButton folderBtn = new FlatButton("Abrir carpeta", false);
+        checkBtn = new FlatButton("Comprobar", false);
+        checkBtn.setToolTipText("Buscar actualizaciones ahora");
+        checkBtn.addActionListener(e -> check());
         updateBtn.setEnabled(false);
         playBtn.setEnabled(false);
         updateBtn.addActionListener(e -> { if (currentPlan == null) check(); else doUpdate(); });
@@ -864,6 +932,7 @@ public class Launcher {
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttons.setOpaque(false);
+        buttons.add(checkBtn);
         buttons.add(folderBtn);
         buttons.add(updateBtn);
         buttons.add(playBtn);
@@ -942,6 +1011,7 @@ public class Launcher {
         for (Target t : detectTargets()) before.add(t.dir());
         updateBtn.setEnabled(false);
         playBtn.setEnabled(false);
+        busy = true;
         status.setText("Preparando la instancia para " + app + "…");
         new SwingWorker<Boolean, Void>() {
             protected Boolean doInBackground() throws Exception {
@@ -953,6 +1023,7 @@ public class Launcher {
                 boolean ok;
                 try { ok = get(); } catch (Exception e) { ok = false; }
                 if (!ok) {
+                    busy = false;
                     error("No se pudo abrir " + app + ". Comprueba que está instalado.");
                     check();
                     return;
@@ -966,6 +1037,7 @@ public class Launcher {
                         if (t.kind() == kind && !before.contains(t.dir())) {
                             ((javax.swing.Timer) e.getSource()).stop();
                             sigil.spin(false);
+                            busy = false;
                             chooseTarget(t);
                             return;
                         }
@@ -973,6 +1045,7 @@ public class Launcher {
                     if (System.currentTimeMillis() - start > 15 * 60_000) {
                         ((javax.swing.Timer) e.getSource()).stop();
                         sigil.spin(false);
+                        busy = false;
                         status.setText("No apareció la instancia. Elígela en \"Instalar en\" cuando esté creada.");
                     }
                 });
@@ -1044,30 +1117,57 @@ public class Launcher {
 
     static void chooseTarget(Target t) {
         if (waitTimer != null && waitTimer.isRunning()) { waitTimer.stop(); sigil.spin(false); }
+        busy = false;
         setTarget(t, true);
         refreshTargetLabel();
         check();
     }
 
-    static void check() {
-        if (checking) return;
+    static void check() { check(false); }
+
+    static javax.swing.Timer autoCheck;
+
+    /** Comprobación cada 10 minutos mientras el launcher está abierto (sin tocar nada si no hay cambios). */
+    static void startAutoCheck() {
+        if (autoCheck != null) return;
+        autoCheck = new javax.swing.Timer(10 * 60_000, e -> {
+            if (!busy && !checking && currentPlan != null) check(true);
+        });
+        autoCheck.start();
+    }
+
+    static void check(boolean quiet) {
+        if (checking || busy) return;
         checking = true;
-        currentPlan = null;
-        updateBtn.setEnabled(false);
-        playBtn.setEnabled(false);
-        status.setText("Comprobando actualizaciones…");
+        checkBtn.setEnabled(false);
+        if (!quiet) {
+            currentPlan = null;
+            updateBtn.setEnabled(false);
+            playBtn.setEnabled(false);
+            status.setText("Comprobando actualizaciones…");
+        }
+        startAutoCheck();
         new SwingWorker<Plan, Void>() {
-            String html, launcherUrl;
+            String html;
+            LauncherRelease rel;
             protected Plan doInBackground() throws Exception {
                 Manifest m = fetchManifest();
-                html = newsHtml(m.commit());
-                launcherUrl = newerLauncherUrl();
+                html = newsHtml();
+                rel = newerLauncher();
                 return plan(gameDir, m);
             }
             protected void done() {
                 checking = false;
+                checkBtn.setEnabled(true);
+                if (busy) return;
                 try {
-                    currentPlan = get();
+                    Plan p = get();
+                    if (quiet && currentPlan != null && p.upToDate() == currentPlan.upToDate()
+                            && p.manifest().version().equals(currentPlan.manifest().version()) && rel == null) return;
+                    currentPlan = p;
+                    updateBtn.setText("Actualizar");
+                    updateBtn.setEnabled(false);
+                    playBtn.setEnabled(false);
                     news.setText(html);
                     news.setCaretPosition(0);
                     if (currentPlan.upToDate()) {
@@ -1080,16 +1180,44 @@ public class Launcher {
                         bar.set(0);
                         updateBtn.setEnabled(true);
                     }
-                    if (launcherUrl != null) {
-                        int r = JOptionPane.showConfirmDialog(null, "Hay una versión nueva del launcher. ¿Abrir la página de descarga?",
-                                PACK_NAME, JOptionPane.YES_NO_OPTION);
-                        if (r == JOptionPane.YES_OPTION) Desktop.getDesktop().browse(URI.create(launcherUrl));
-                    }
+                    if (rel != null) offerLauncherUpdate(rel);
                 } catch (Exception e) {
+                    if (quiet) return;
                     status.setText("No se pudo comprobar. ¿Tienes internet?");
                     updateBtn.setText("Reintentar");
                     updateBtn.setEnabled(true);
                 }
+            }
+        }.execute();
+    }
+
+    /** Hay launcher nuevo: con el arrancador se descarga solo y se ofrece reiniciar; sin él, la página. */
+    static void offerLauncherUpdate(LauncherRelease rel) {
+        if (rel.version().equals(launcherOffered)) return;
+        launcherOffered = rel.version();
+        if (APP_DIR == null || rel.jarUrl() == null) {
+            int r = JOptionPane.showConfirmDialog(null, "Hay una versión nueva del launcher (" + rel.version() + "). ¿Abrir la página de descarga?",
+                    PACK_NAME, JOptionPane.YES_NO_OPTION);
+            if (r == JOptionPane.YES_OPTION) try { Desktop.getDesktop().browse(URI.create(rel.pageUrl())); } catch (Exception ignored) { }
+            return;
+        }
+        new SwingWorker<Void, Void>() {
+            protected Void doInBackground() throws Exception {
+                if (!launcherAlreadyDownloaded(rel.version())) downloadLauncher(rel);
+                return null;
+            }
+            protected void done() {
+                try { get(); } catch (Exception e) { launcherOffered = null; return; } // se reintenta en la próxima comprobación
+                if (busy) {
+                    status.setText(status.getText() + " · launcher " + rel.version() + " listo al reabrir");
+                    return;
+                }
+                int r = JOptionPane.showConfirmDialog(null, "Se ha descargado el launcher " + rel.version() + ".\n¿Reiniciar ahora para usarlo?",
+                        PACK_NAME, JOptionPane.YES_NO_OPTION);
+                if (r == JOptionPane.YES_OPTION) {
+                    try { restartLauncher(); }
+                    catch (Exception e) { error("Cierra y vuelve a abrir el launcher para usar la versión " + rel.version() + "."); }
+                } else status.setText(status.getText() + " · launcher " + rel.version() + " listo al reabrir");
             }
         }.execute();
     }
@@ -1107,6 +1235,8 @@ public class Launcher {
         }
         updateBtn.setText("Actualizar");
         updateBtn.setEnabled(false);
+        checkBtn.setEnabled(false);
+        busy = true;
         sigil.spin(true);
         new SwingWorker<Void, Void>() {
             protected Void doInBackground() throws Exception {
@@ -1118,8 +1248,11 @@ public class Launcher {
             }
             protected void done() {
                 sigil.spin(false);
+                busy = false;
+                checkBtn.setEnabled(true);
                 try {
                     get();
+                    currentPlan = new Plan(currentPlan.manifest(), List.of(), List.of(), 0);
                     status.setText("Todo al día · versión " + currentPlan.manifest().version());
                     bar.set(1);
                     playBtn.setEnabled(true);

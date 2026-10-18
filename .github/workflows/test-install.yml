@@ -18,6 +18,22 @@ jobs:
       - name: Compilar y empaquetar
         shell: bash
         run: .github/scripts/build-launcher.sh 1.0.0 launcher-src/test/InstallTest.java launcher-src/test/ModrinthDbTest.java
+      - name: Arrancador (launcher descargado)
+        shell: bash
+        run: |
+          J="build/app/Derisomod Launcher/runtime/bin/java.exe"
+          APP="$APPDATA/.derisomod-launcher/app"
+          rm -rf "$APP"
+          echo "--- sin descarga:"; "$J" -jar dist/Derisomod-Launcher.jar --version | tee out1.txt
+          grep -q "Derisomod-Launcher.jar" out1.txt
+          mkdir -p "$APP"; cp dist/Derisomod-Launcher.jar "$APP/launcher-new.jar"; echo 99.0.0 > "$APP/launcher-new.version"
+          echo "--- con una version 99.0.0 descargada:"; "$J" -jar dist/Derisomod-Launcher.jar --version | tee out2.txt
+          grep -q "derisomod-launcher/app/launcher.jar" out2.txt
+          echo basura > "$APP/launcher.jar"
+          echo "--- con la descargada rota:"; "$J" -jar dist/Derisomod-Launcher.jar --version | tee out3.txt
+          grep -q "Derisomod-Launcher.jar" out3.txt
+          test ! -f "$APP/launcher.jar"
+          rm -rf "$APP"
       - name: Perfil de Modrinth (app.db)
         shell: bash
         run: '"build/app/Derisomod Launcher/runtime/bin/java.exe" -cp dist/Derisomod-Launcher.jar ModrinthDbTest'

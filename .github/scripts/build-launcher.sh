@@ -12,16 +12,16 @@ curl -fsSL -o build/lib/slf4j-api.jar   "$M/org/slf4j/slf4j-api/$SLF4J/slf4j-api
 curl -fsSL -o build/lib/slf4j-nop.jar   "$M/org/slf4j/slf4j-nop/$SLF4J/slf4j-nop-$SLF4J.jar"
 
 SEP=":"; [[ "${OS:-}" == "Windows_NT" ]] && SEP=";"
-javac -encoding UTF-8 -cp "build/lib/sqlite-jdbc.jar${SEP}build/lib/slf4j-api.jar" -d build/classes launcher-src/Launcher.java "$@"
+javac -encoding UTF-8 -cp "build/lib/sqlite-jdbc.jar${SEP}build/lib/slf4j-api.jar" -d build/classes launcher-src/Launcher.java launcher-src/Bootstrap.java "$@"
 
 # Meter las librerías dentro del .jar
 ( cd build/classes && for j in ../lib/*.jar; do jar xf "$j"; done && rm -rf META-INF/MANIFEST.MF META-INF/*.SF META-INF/*.RSA META-INF/versions module-info.class )
-printf "Main-Class: Launcher\n" > build/manifest.txt
+printf "Main-Class: Bootstrap\n" > build/manifest.txt
 jar cfm dist/Derisomod-Launcher.jar build/manifest.txt -C build/classes . -C launcher-src/resources .
 
 if [[ "${OS:-}" == "Windows_NT" ]]; then
   jpackage --type app-image --name "Derisomod Launcher" --app-version "$VERSION" \
-    --input dist --main-jar Derisomod-Launcher.jar --main-class Launcher --icon launcher-src/icon.ico \
+    --input dist --main-jar Derisomod-Launcher.jar --main-class Bootstrap --icon launcher-src/icon.ico \
     --add-modules java.se,jdk.crypto.ec,jdk.zipfs,jdk.unsupported,jdk.charsets,jdk.localedata \
     --jlink-options "--strip-debug --no-man-pages --no-header-files" --dest build/app
 fi
