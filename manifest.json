@@ -3,11 +3,11 @@
   "minecraft": "1.21.1",
   "loader": "neoforge",
   "neoforge": "21.1.262",
-  "version": "8fd6ba35",
+  "version": "edf0b86f",
   "mirrorDirs": [
     "mods"
   ],
-  "commit": "8e63cdfedf1b71f2140269494b76db6e28761ac2",
+  "commit": "49d1f95e77911bca82bb2dccfea14ccc5fd06ed7",
   "files": [
     {
       "path": "config/derisomod-client.toml",
@@ -90,9 +90,9 @@
       "size": 2011352
     },
     {
-      "path": "mods/derisomod_roguelike-0.6.0.jar",
-      "sha1": "ed3ff9d16693d656695238e6435f98a24e68e6bf",
-      "size": 7026813
+      "path": "mods/derisomod_roguelike-0.6.2.jar",
+      "sha1": "809d5a47435ddb7de74babd42e5f1cd9ddb3035c",
+      "size": 11182306
     },
     {
       "path": "mods/derisomod_ylvia-0.13.0.jar",
