@@ -3,7 +3,7 @@
   "minecraft": "1.21.1",
   "loader": "neoforge",
   "neoforge": "21.1.262",
-  "version": "c2dc2473",
+  "version": "e2225f7c",
   "mirrorDirs": [
     "mods"
   ],
@@ -89,9 +89,9 @@
       "size": 115161
     },
     {
-      "path": "mods/derisomod_ylvia-0.12.1.jar",
-      "sha1": "c5b1a1ae04ce4cf2335d5bc7b911ad1705f8e06f",
-      "size": 6431575
+      "path": "mods/derisomod_ylvia-0.12.2.jar",
+      "sha1": "82d689919e235a135bd81e70ad01ab0c72a99e1a",
+      "size": 6431981
     },
     {
       "path": "mods/Essential_1-5-0-1_neoforge_1-21-1.jar",
