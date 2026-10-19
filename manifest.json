@@ -3,11 +3,11 @@
   "minecraft": "1.21.1",
   "loader": "neoforge",
   "neoforge": "21.1.262",
-  "version": "65b399d5",
+  "version": "d6b94bc6",
   "mirrorDirs": [
     "mods"
   ],
-  "commit": "b6b2a961e144a88b9ec36fd3369a8e3954c1d3f5",
+  "commit": "7180f155947b1a5da1e2c9daf5343a651b631f06",
   "files": [
     {
       "path": "config/derisomod-client.toml",
@@ -85,9 +85,9 @@
       "size": 3372909
     },
     {
-      "path": "mods/derisomod_npcs-0.5.5.jar",
-      "sha1": "57b28666f371f5ff12b8fd5851ae30d1d283912e",
-      "size": 2753490
+      "path": "mods/derisomod_npcs-0.5.8.jar",
+      "sha1": "7e31f5f71fb54cf65d0ae6d9a7bf1e8b92935060",
+      "size": 2754079
     },
     {
       "path": "mods/derisomod_roguelike-0.6.2.jar",
