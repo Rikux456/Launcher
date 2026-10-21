@@ -3,11 +3,11 @@
   "minecraft": "1.21.1",
   "loader": "neoforge",
   "neoforge": "21.1.262",
-  "version": "8d687392",
+  "version": "7cbe3e5d",
   "mirrorDirs": [
     "mods"
   ],
-  "commit": "6d6d923b0bfde6dce9495f09b14cb324fac71bb2",
+  "commit": "e9ed9b8259dba4991f852f23c888471f81f6e2fa",
   "files": [
     {
       "path": "config/derisomod-client.toml",
@@ -76,28 +76,28 @@
     },
     {
       "path": "mods/derisomod-2.73.jar",
-      "sha1": "61b2515124202b487c6c2bcb6fceb93a930fe8fd",
+      "sha1": "0a56071e64c67b820297db58458e17b22205711b",
       "size": 9949895
     },
     {
       "path": "mods/derisomod_characters-0.35.7.jar",
-      "sha1": "1d9ca14ced276750aa95caeb12bf26d6a3d573e8",
+      "sha1": "cdca6c1957ba52f5a029662921d24333ec603129",
       "size": 3509789
     },
     {
       "path": "mods/derisomod_npcs-0.5.9.jar",
-      "sha1": "186d42e297ca5f3f779c839e00692c29b6673055",
+      "sha1": "ad6eb9e25a7b17d8016b58d65592756e55678715",
       "size": 2754080
     },
     {
       "path": "mods/derisomod_roguelike-0.6.2.jar",
-      "sha1": "9c8de7cec5740ea478ea7cfb1e1d008596bc1a21",
+      "sha1": "809d5a47435ddb7de74babd42e5f1cd9ddb3035c",
       "size": 11182306
     },
     {
-      "path": "mods/derisomod_ylvia-0.29.5.jar",
-      "sha1": "4cc9a7c4bea628cb9a4ee9b58e2c92d2c02cfec8",
-      "size": 7437260
+      "path": "mods/derisomod_ylvia-0.29.6.jar",
+      "sha1": "f75afeb955d92d3dac06da0a4df9beb002f23da6",
+      "size": 7509115
     },
     {
       "path": "mods/Essential_1-5-0-1_neoforge_1-21-1.jar",
@@ -141,8 +141,8 @@
     },
     {
       "path": "shaderpacks/Ylvia-Shaders.zip",
-      "sha1": "f5d4685000c7ebcdeeee7a00c1d8b31071788c93",
-      "size": 543754
+      "sha1": "f7514b4d8f29929e8da7e0a590c833fc231bf090",
+      "size": 543851
     }
   ]
 }
