@@ -3,11 +3,11 @@
   "minecraft": "1.21.1",
   "loader": "neoforge",
   "neoforge": "21.1.262",
-  "version": "8e31bb27",
+  "version": "4c2606c1",
   "mirrorDirs": [
     "mods"
   ],
-  "commit": "8a1161aa119735165b78bc3c9f5579ec13ade3d2",
+  "commit": "ee97d3d8dae096e5f8825c8dea943858d62a7b4f",
   "files": [
     {
       "path": "config/derisomod-client.toml",
@@ -75,9 +75,9 @@
       "size": 77555
     },
     {
-      "path": "mods/derisomod-2.118.jar",
-      "sha1": "bd7bcee2d54b813294b80f3c48bd03e3a0f0dab5",
-      "size": 10127684
+      "path": "mods/derisomod-2.119.jar",
+      "sha1": "a21cbb8c8c9d98d2cec384b6125b1651b911eaaf",
+      "size": 10130087
     },
     {
       "path": "mods/derisomod_characters-0.35.10.jar",
