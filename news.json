@@ -1,6 +1,11 @@
 [
   {
     "fecha": "27/10/2026",
+    "titulo": "Derisomod-Characters 0.49.19",
+    "texto": "Summon de Varek con shaders: la falda ya se ve entera (antes salía cortada en la cintura)."
+  },
+  {
+    "fecha": "27/10/2026",
     "titulo": "Derisomod-Characters 0.49.18",
     "texto": "Summon de Varek: el pelo ya se ve por delante y sin parpadeos por detrás, y el icono del HUD vuelve a mostrar su cara (con y sin shaders)."
   },
