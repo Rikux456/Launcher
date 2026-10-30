@@ -3,11 +3,11 @@
   "minecraft": "1.21.1",
   "loader": "neoforge",
   "neoforge": "21.1.262",
-  "version": "0567d238",
+  "version": "3477ca90",
   "mirrorDirs": [
     "mods"
   ],
-  "commit": "2e132ed1db7ac20f52d895248b239a6d8ecdab06",
+  "commit": "01cec01a23d6e9895f760fbb8d6f73828775d5a7",
   "files": [
     {
       "path": "config/derisomod-client.toml",
@@ -80,28 +80,28 @@
       "size": 77555
     },
     {
-      "path": "mods/derisomod-2.276.jar",
-      "sha1": "6bea13a23484e2d66d73343e8808953b246f4ac4",
-      "size": 14933841
+      "path": "mods/derisomod-2.287.jar",
+      "sha1": "245624afe6e01ac6ca5625ba484a9cc3a9cd4b79",
+      "size": 14963125
     },
     {
       "path": "mods/derisomod_characters-0.49.29.jar",
-      "sha1": "2312acd227c786cd1cc0f16533cc591ea5caf71a",
+      "sha1": "2b6f4bcce4b918f8fd5100bac9abf9b00e731096",
       "size": 3872086
     },
     {
       "path": "mods/derisomod_npcs-0.6.5.jar",
-      "sha1": "1ee9fe1e54b02f064dd55d4bf4455202ce7ccaac",
+      "sha1": "813589b8c54efd7337bc3b918d92bcea2537c025",
       "size": 2993999
     },
     {
       "path": "mods/derisomod_roguelike-0.6.2.jar",
-      "sha1": "9c8de7cec5740ea478ea7cfb1e1d008596bc1a21",
+      "sha1": "809d5a47435ddb7de74babd42e5f1cd9ddb3035c",
       "size": 11182306
     },
     {
       "path": "mods/derisomod_ylvia-0.34.0.jar",
-      "sha1": "8ee392c9f53ca1bedc9e087d83abdbb223582d7e",
+      "sha1": "21a6d8bcde8c5dbc0690a7112255871f6e182134",
       "size": 8645500
     },
     {
