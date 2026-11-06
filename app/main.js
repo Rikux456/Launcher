@@ -29,7 +29,8 @@ const publicTarget = () => target && { kind: target.kind, name: target.name, lab
 
 function createWindow() {
   const wa = screen.getPrimaryDisplay().workAreaSize;
-  const s = Math.min(1, (wa.width * 0.9) / W, (wa.height * 0.9) / H);
+  // tamaño contenido (la intro es de 720p): como mucho 1440 px de ancho y el 75 % de la pantalla; se puede agrandar
+  const s = Math.min(1440 / W, (wa.width * 0.75) / W, (wa.height * 0.75) / H);
   win = new BrowserWindow({
     width: Math.round(W * s), height: Math.round(H * s), minWidth: 940, minHeight: 520,
     frame: false, backgroundColor: '#050819', show: false, title: core.PACK_NAME + ' Launcher',

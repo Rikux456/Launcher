@@ -15,12 +15,15 @@
   let TT = 0, x = null;
   function rgbConic(c, cx, cy, a = 1, l = 80) { const g = c.createConicGradient(TT * .35, cx, cy); for (let i = 0; i <= 12; i++) g.addColorStop(i / 12, `hsla(${i * 30 + 200},100%,${l}%,${a})`); return g; }
   function glow(t) {
-    x.save(); x.globalCompositeOperation = 'lighter'; const s = 2.6, Rr = 170 * s; const o = mk('glow'), g2 = o.getContext('2d');
+    const br = 1 + .07 * Math.sin(TT * 1.25) + .035 * Math.sin(TT * 2.7 + 1);   // respiración del brillo
+    x.save(); x.globalCompositeOperation = 'lighter'; x.globalAlpha = .88 + .12 * Math.sin(TT * 1.25); const s = 2.6, Rr = 170 * s * br; const o = mk('glow'), g2 = o.getContext('2d');
     let g = g2.createRadialGradient(LX, LY, 0, LX, LY, Rr); g.addColorStop(0, 'rgba(140,190,255,.85)'); g.addColorStop(.12, 'rgba(80,140,255,.5)'); g.addColorStop(.4, 'rgba(40,90,230,.18)'); g.addColorStop(1, 'rgba(20,50,200,0)');
     if (t) { g2.fillStyle = rgbConic(g2, LX, LY, 1, 82); g2.fillRect(0, 0, 1880, 1040); const m = g2.createRadialGradient(LX, LY, 0, LX, LY, Rr); m.addColorStop(0, 'rgba(0,0,0,.9)'); m.addColorStop(.12, 'rgba(0,0,0,.5)'); m.addColorStop(.4, 'rgba(0,0,0,.16)'); m.addColorStop(1, 'rgba(0,0,0,0)'); g2.globalCompositeOperation = 'destination-in'; g2.fillStyle = m; g2.fillRect(0, 0, 1880, 1040); }
     else { g2.fillStyle = g; g2.fillRect(0, 0, 1880, 1040); }
     x.drawImage(o, 0, 0);
-    for (const [ang, L, w] of [[0, 190, 4], [Math.PI / 2, 140, 4], [Math.PI / 4, 55, 2.5], [-Math.PI / 4, 55, 2.5]]) {
+    const sw = .015 * Math.sin(TT * .3), spin = TT * .12;   // vaivén de la cruz y giro lento de los diagonales
+    for (const [ang0, L0, w, k] of [[0, 190, 4, 0], [Math.PI / 2, 140, 4, 1], [Math.PI / 4, 55, 2.5, 2], [-Math.PI / 4, 55, 2.5, 3]]) {
+      const ang = k < 2 ? ang0 + sw : ang0 + spin, L = L0 * (1 + (k < 2 ? .1 : .35) * Math.sin(TT * (k < 2 ? 1.1 : 1.9) + k * 1.7));
       x.save(); x.translate(LX, LY); x.rotate(ang); const gl = x.createLinearGradient(-L * s, 0, L * s, 0);
       if (t) { for (let i = 0; i <= 10; i++) { const u = i / 10; gl.addColorStop(u, `hsla(${u * 300 + 200},100%,86%,${Math.pow(Math.sin(Math.PI * u), 3)})`); } }
       else { gl.addColorStop(0, 'rgba(140,190,255,0)'); gl.addColorStop(.5, 'rgba(245,250,255,1)'); gl.addColorStop(1, 'rgba(140,190,255,0)'); }
@@ -35,6 +38,7 @@
     x.globalCompositeOperation = 'lighter';
     if (rgb) { const o = mk('star'), c = o.getContext('2d'); c.fillStyle = rgbConic(c, px, py, 1, 80); c.fillRect(px - 32 * s, py - 32 * s, 64 * s, 64 * s); const m = c.createRadialGradient(px, py, 0, px, py, 30 * s); m.addColorStop(0, 'rgba(0,0,0,.85)'); m.addColorStop(1, 'rgba(0,0,0,0)'); c.globalCompositeOperation = 'destination-in'; c.fillStyle = m; c.fillRect(0, 0, 1880, 1040); x.drawImage(o, 0, 0); }
     else { const g = x.createRadialGradient(px, py, 0, px, py, 30 * s); g.addColorStop(0, col(.7)); g.addColorStop(1, col(0)); x.fillStyle = g; x.fillRect(px - 30 * s, py - 30 * s, 60 * s, 60 * s); }
+    x.globalCompositeOperation = 'source-over';   // relleno opaco: blanca en la estrella, negra en el agujero
     x.fillStyle = core; x.beginPath(); const V = 20 * s, H = 13 * s, w = 2.6 * s;
     x.moveTo(px, py - V); x.lineTo(px + w, py - w); x.lineTo(px + H, py); x.lineTo(px + w, py + w); x.lineTo(px, py + V * .8); x.lineTo(px - w, py + w); x.lineTo(px - H, py); x.lineTo(px - w, py - w); x.closePath();
     x.shadowColor = rgb ? 'rgba(0,0,0,0)' : col(1); x.shadowBlur = 10 * s; x.fill(); x.shadowBlur = 0; x.globalCompositeOperation = 'source-over';
@@ -85,9 +89,9 @@
     if (m <= 0 || m >= 1) { state(x, m >= 1, IMG); return; }
     const gm = ss(0, .35, m), pm = cl((m - .35) / .65);
     // lo de la estrella no cambia con el tiempo: se dibuja una vez y se guarda
-    if (!pool.G0ok) { state(mk('G0').getContext('2d'), false, IMG, 'glow'); state(mk('A').getContext('2d'), false, IMG, 'piece', true); pool.G0ok = true; }
-    const G0 = pool.G0, A = pool.A, G1 = mk('G1');
-    state(G1.getContext('2d'), true, IMG, 'glow');
+    if (!pool.Aok) { state(mk('A').getContext('2d'), false, IMG, 'piece', true); pool.Aok = true; }
+    const A = pool.A, G0 = mk('G0'), G1 = mk('G1');
+    state(G0.getContext('2d'), false, IMG, 'glow'); state(G1.getContext('2d'), true, IMG, 'glow');
     x.save(); x.globalAlpha = 1 - gm; x.drawImage(G0, 0, 0); x.globalAlpha = gm; x.drawImage(G1, 0, 0); x.restore();
     const B = mk('B'), O = mk('O');
     state(B.getContext('2d'), true, IMG, 'piece', true);
@@ -118,8 +122,7 @@
     const t = start == null ? 0 : (now - start) / 1000;
     TT = t;
     const m = window.REY_M != null ? window.REY_M : phase(t);
-    // la estrella es fija: solo se redibuja al cambiar; el agujero y los cambios, a ~30 fps
-    if (m === lastM && m === 0) return;
+    // todo se anima (el brillo respira), a ~30 fps
     if (now - lastDraw < 33) return;
     lastDraw = now; lastM = m;
     draw(m);
