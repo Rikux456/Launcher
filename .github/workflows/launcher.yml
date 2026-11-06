@@ -4,7 +4,9 @@ name: Compilar launcher
 #  - Derisomod-Launcher-Setup-<versión>.exe + latest.yml : el launcher nuevo (se actualiza solo con estos archivos)
 #  - Derisomod-Launcher.jar : puente para los launchers Java 1.4, que lo descargan solos e instalan el nuevo
 on:
-  # (mientras se prueba la 2.0.0, solo a mano; luego vuelve a ser automático al cambiar la versión)
+  push:
+    branches: [main]
+    paths: ["app/package.json", "launcher-src/bridge/**"]
   workflow_dispatch:
 
 permissions:

@@ -5,9 +5,9 @@ El jugador abre el launcher, le da a **Actualizar** y después a **Jugar**.
 
 ## Para jugadores
 
-1. Descarga el launcher desde [Releases](../../releases/latest):
-   - `Derisomod-Launcher-Windows.zip`: descomprímelo y abre `Derisomod Launcher.exe` (lleva Java incluido).
-   - `Derisomod-Launcher.jar`: si ya tienes Java 21.
+1. Descarga e instala **`Derisomod-Launcher-Setup-…exe`** desde [Releases](../../releases/latest).
+   Si Windows avisa ("Windows protegió su PC"): *Más información → Ejecutar de todas formas* (no está firmado).
+   Quien ya tenga el launcher 1.4 no tiene que hacer nada: se instala solo el nuevo.
 2. La primera vez te pregunta con qué juegas y **crea la instancia solo, con NeoForge incluido**:
    - **Modrinth**: se abre Modrinth App pidiendo confirmar la instalación del perfil "Derisomod". Acéptala.
      *Jugar* arranca el juego directamente con ese perfil.
@@ -17,8 +17,9 @@ El jugador abre el launcher, le da a **Actualizar** y después a **Jugar**.
    Puedes cambiarlo cuando quieras en **Instalar en**, debajo del título.
 3. Dale a **Actualizar** y luego a **Jugar**.
 
-El launcher busca actualizaciones al abrirse, cada 10 minutos y cuando pulsas **Comprobar**.
-**El propio launcher se actualiza solo** (desde la 1.4.0): descarga la versión nueva y te ofrece reiniciar.
+El launcher busca actualizaciones al abrirse, cada 10 minutos y cuando pulsas **Comprobar**, y **se actualiza solo**
+(descarga la versión nueva y ofrece reiniciar). La intro sale entera la primera vez de cada versión (clic o Esc la
+salta); en ⚙ se puede ver siempre, cambiar el volumen o volver a verla; ♪ silencia la música.
 
 Los mods de esa instancia quedan idénticos a los del modpack: si hay otros mods, el launcher avisa antes de quitarlos.
 
@@ -46,13 +47,18 @@ Usa [GitHub Desktop](https://desktop.github.com/) o `git push`. El límite real 
 - `config/`, `defaultconfigs/` y el resto: se añaden o reemplazan los archivos del repositorio, sin borrar nada.
   Si un jugador cambia una config, se respeta hasta que tú subas una versión nueva de ese archivo.
 
-### Publicar una versión nueva del launcher
+### El launcher (carpeta `app/`, Electron)
 
-1. Sube `LAUNCHER_VERSION` en `launcher-src/Launcher.java` (por ejemplo a `1.4.1`) y guarda.
-2. La Action *Compilar launcher* genera el `.exe` y el `.jar` y crea la release `v1.4.1` sola.
-3. Los launchers 1.4.0 o más nuevos la descargan solos y ofrecen reiniciar (el `.exe` abre un arrancador,
-   `Bootstrap`, que usa la versión más nueva: la descargada o la de dentro). Los anteriores a la 1.4.0
-   solo avisan y abren la página de descarga.
+- La interfaz es una página web (`app/renderer/`): el fondo animado, la intro y el rey. La lógica (modpack, Modrinth,
+  Prism, NeoForge) está en `app/core.js`.
+- La intro y la música **no están en el código** (la música no es nuestra): están en el borrador de release
+  `media-privado` (`intro_launcher.webm` y `musica_menu_bucle.ogg`, o en un `.zip`). Para cambiarlas, se cambian ahí.
+- **Probar**: Actions → *Probar launcher* → Run workflow. Arranca el launcher en Windows, saca capturas (rama
+  `ci-capturas`) y deja el instalador para descargarlo (Artifacts).
+- **Publicar una versión nueva**: sube `version` en `app/package.json` (por ejemplo a `2.0.1`). La Action
+  *Compilar launcher* monta el instalador y crea la release `v2.0.1`; todos los launchers se actualizan solos.
+- `launcher-src/` es el launcher Java antiguo (1.4); `launcher-src/bridge/` es el puente que hace que los 1.4
+  instalen el nuevo.
 
 ### Cambiar la versión de NeoForge
 
@@ -60,4 +66,4 @@ Edita `NEOFORGE` en `.github/scripts/generate_manifest.py`. Las instancias nueva
 
 ### Cambiar el nombre o el repositorio
 
-Las constantes están al principio de `launcher-src/Launcher.java` (`PACK_NAME`, `REPO`, `RAM`…).
+Las constantes están al principio de `app/core.js` (`PACK_NAME`, `REPO`, `RAM`…) y en `app/package.json`.
