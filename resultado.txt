@@ -1,0 +1,40 @@
+versiones {"electron":"37.10.3","node":"22.21.1","chrome":"138.0.7204.251"}
+[pagina] [.WebGL-0x722400abc000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[pagina] [.WebGL-0x722400abc000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[pagina] [.WebGL-0x722400abf100]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[pagina] [.WebGL-0x722400abc000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)
+captura 0_primera_vez
+captura 1_launcher
+estado: Comprobando actualizaciones…
+OK    interfaz
+captura 2_rey_agujero
+[pagina] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+captura 3_rey_cambio
+OK    rey agujero negro
+captura 4_menu
+OK    menu se abre con
+captura 5_aviso
+OK    aviso
+  media: intro_launcher.mp4 27027996
+  media: musica_menu_bucle.ogg 2026522
+OK    archivos de la intro
+captura 6_intro
+fotogramas (original: 10 s ~23, 30 s ~45, 55 s ~40): [{"t":11.7,"lum":32,"rs":4,"w":1880,"dec":189,"err":null},{"t":31.7,"lum":52,"rs":4,"w":1880,"dec":332,"err":null},{"t":54,"lum":44,"rs":4,"w":1880,"dec":442,"err":null}]
+captura 6b_intro_30s
+intro reproduciendo: false
+captura 7_intro_final
+salto al final: 54
+OK    intro
+musica decodificada (s): 111.51818594104309
+OK    musica
+sqlite 3.50.4
+OK    node:sqlite
+C:\Users\runneradmin\AppData\Roaming\.derisomod-launcher-cache\Derisomod.mrpack
+OK    mrpack
+manifest 5dc08257 commit 5b05ad7a9c80b7e66b44b108fdcd9ef43713f1ab
+plan 28 archivos 117.5 MB
+OK    modpack real (comprobar + descargar + volver a comprobar)
+estado: Actualización disponible · 28 archivo(s), 117,5 MB
+captura 8_comprobado
+OK    comprobar desde la interfaz
+RESULTADO: OK
