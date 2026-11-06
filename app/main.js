@@ -11,6 +11,8 @@ const W = 1880, H = 1040;   // tamaño de diseño de la interfaz (se escala a la
 
 // en PCs sin tarjeta gráfica compatible, que el fondo WebGL siga funcionando con el modo por software
 app.commandLine.appendSwitch('enable-unsafe-swiftshader');
+// la intro (720p) se decodifica por software: es poco trabajo y evita fotogramas negros con algunas tarjetas/controladores
+app.commandLine.appendSwitch('disable-accelerated-video-decode');
 protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } }]);
 if (!SELFTEST && !app.requestSingleInstanceLock()) app.quit();
 
