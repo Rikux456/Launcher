@@ -13,6 +13,13 @@ gh api "repos/$GITHUB_REPOSITORY/releases/$id/assets" --jq '.[] | "\(.id) \(.nam
   echo "media: $name"
   gh api -H "Accept: application/octet-stream" "repos/$GITHUB_REPOSITORY/releases/assets/$aid" > "$DEST/$name"
 done
+# también vale si se arrastraron al texto del borrador (enlaces de github.com/user-attachments)
+gh api "repos/$GITHUB_REPOSITORY/releases/$id" --jq '.body // ""' | grep -oE '\[[^]]+\]\(https://github\.com/user-attachments/[^)]+\)' | while read -r link; do
+  name=$(echo "$link" | sed -E 's/^\[([^]]+)\].*/\1/'); url=$(echo "$link" | sed -E 's/.*\((https[^)]+)\)$/\1/')
+  [[ -s "$DEST/$name" ]] && continue
+  echo "media (enlace): $name"
+  curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -o "$DEST/$name" "$url" || curl -fsSL -o "$DEST/$name" "$url"
+done
 # los .zip se descomprimen (GitHub a veces no deja subir .ogg sueltos)
 for z in "$DEST"/*.zip; do [[ -e "$z" ]] || continue; echo "descomprimiendo $(basename "$z")"; tar -xf "$z" -C "$DEST" && rm -f "$z"; done
 # por si el zip trae una carpeta dentro
