@@ -33,8 +33,14 @@ module.exports = async function selftest(win, { core, ipc }) {
     await step('intro', async () => {
       await js("{document.getElementById('intro').classList.remove('hide');document.getElementById('intro').style.opacity=1;const v=document.getElementById('introv');v.style.opacity=1;v.src='media/intro_launcher.webm';v.play().then(()=>{v.currentTime=20})}");
       await wait(3000); await shot('6_intro');
-      const lum = await js("{const v=document.getElementById('introv');const c=document.createElement('canvas');c.width=160;c.height=90;const g=c.getContext('2d');g.drawImage(v,0,0,160,90);const d=g.getImageData(0,0,160,90).data;let s=0;for(let i=0;i<d.length;i+=4)s+=(d[i]+d[i+1]+d[i+2])/3;s/(d.length/4)}");
-      say('brillo del fotograma dibujado en la página:', Math.round(lum), '(en el vídeo original, en ese punto: ~13)'); if (!(lum > 3)) throw new Error('el vídeo no se ve (fotograma negro)'); say('intro reproduciendo:', await js("!document.getElementById('introv').paused && document.getElementById('introv').currentTime"));
+      const diag = await js(`(async()=>{const v=document.getElementById('introv');const out=[];
+        const meas=()=>{const c=document.createElement('canvas');c.width=160;c.height=90;const g=c.getContext('2d');g.drawImage(v,0,0,160,90);const d=g.getImageData(0,0,160,90).data;let s=0;for(let i=0;i<d.length;i+=4)s+=(d[i]+d[i+1]+d[i+2])/3;return Math.round(s/(d.length/4));};
+        for(const t of [10,30,55]){v.currentTime=t;await new Promise(r=>{v.onseeked=r;setTimeout(r,4000)});await new Promise(r=>setTimeout(r,400));
+          const q=v.getVideoPlaybackQuality();out.push({t:+v.currentTime.toFixed(1),lum:meas(),rs:v.readyState,w:v.videoWidth,dec:q.totalVideoFrames,err:v.error&&v.error.message});}
+        return out;})()`);
+      say('fotogramas (original: 10 s ~23, 30 s ~45, 55 s ~40):', JSON.stringify(diag));
+      if (!diag.some(d => d.lum > 5)) throw new Error('el vídeo no se ve (fotogramas negros)');
+      await js("{const v=document.getElementById('introv');v.currentTime=30}"); await wait(1500); await shot('6b_intro_30s'); say('intro reproduciendo:', await js("!document.getElementById('introv').paused && document.getElementById('introv').currentTime"));
       await js("{const v=document.getElementById('introv');v.currentTime=55.3;}"); await wait(1500); await shot('7_intro_final');
       say('salto al final:', await js("document.getElementById('introv').currentTime")); await js("{const v=document.getElementById('introv');v.pause();document.getElementById('intro').classList.add('hide')}");
     });
