@@ -29,13 +29,14 @@ module.exports = async function selftest(win, { core, ipc }) {
     await step('rey agujero negro', async () => { await js('window.REY_M=1'); await wait(2500); await shot('2_rey_agujero'); await js('window.REY_M=0.6'); await wait(2500); await shot('3_rey_cambio'); await js('window.REY_M=null'); });
     await step('menu se abre con', async () => { await js("document.getElementById('open').click()"); await wait(1500); await shot('4_menu'); await js("document.querySelector('.menu')&&document.querySelector('.menu').remove()"); });
     await step('aviso', async () => { js("window.__ui.dialog('¿Con qué launcher juegas?','Se creará la instancia de Derisomod con NeoForge ya instalado; no tienes que configurar nada.',[{label:'Launcher oficial'},{label:'Modrinth',main:true}])"); await wait(1200); await shot('5_aviso'); await js("document.querySelector('.modal')&&document.querySelector('.modal').remove()"); });
+    await step('archivos de la intro', async () => { const d = path.join(__dirname, 'renderer', 'media'); for (const f of await fsp.readdir(d)) say('  media:', f, (await fsp.stat(path.join(d, f))).size); });
     await step('intro', async () => {
-      await js("document.getElementById('intro').classList.remove('hide');document.getElementById('intro').style.opacity=1;const v=document.getElementById('introv');v.style.opacity=1;v.src='media/intro_launcher.webm';v.currentTime=20;v.play()");
+      await js("{document.getElementById('intro').classList.remove('hide');document.getElementById('intro').style.opacity=1;const v=document.getElementById('introv');v.style.opacity=1;v.src='media/intro_launcher.webm';v.play().then(()=>{v.currentTime=20})}");
       await wait(3000); await shot('6_intro'); say('intro reproduciendo:', await js("!document.getElementById('introv').paused && document.getElementById('introv').currentTime"));
-      await js("const v=document.getElementById('introv');v.currentTime=55.3;"); await wait(1500); await shot('7_intro_final');
-      await js("const v=document.getElementById('introv');v.pause();document.getElementById('intro').classList.add('hide')");
+      await js("{const v=document.getElementById('introv');v.currentTime=55.3;}"); await wait(1500); await shot('7_intro_final');
+      say('salto al final:', await js("document.getElementById('introv').currentTime")); await js("{const v=document.getElementById('introv');v.pause();document.getElementById('intro').classList.add('hide')}");
     });
-    await step('musica', async () => { say('musica decodificada:', await js("fetch('media/musica_menu_bucle.ogg').then(r=>r.arrayBuffer()).then(b=>new AudioContext().decodeAudioData(b)).then(a=>a.duration)")); });
+    await step('musica', async () => { say('musica decodificada (s):', await js("fetch('media/musica_menu_bucle.ogg').then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer()}).then(b=>new AudioContext().decodeAudioData(b)).then(a=>a.duration).catch(e=>'ERROR '+e.message)")); });
     await step('node:sqlite', async () => { const { DatabaseSync } = require('node:sqlite'); const d = new DatabaseSync(':memory:'); say('sqlite', d.prepare('select sqlite_version() v').get().v); d.close(); });
     await step('mrpack', async () => { say(await core.buildMrpack({ version: 't', minecraft: '1.21.1', neoforge: '21.1.262' })); });
     await step('modpack real (comprobar + descargar + volver a comprobar)', async () => {

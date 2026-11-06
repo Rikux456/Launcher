@@ -1,9 +1,8 @@
 // Proceso principal de Electron: ventana, archivos de la interfaz, ajustes y todo lo que pide la interfaz.
 'use strict';
-const { app, BrowserWindow, ipcMain, protocol, net, shell, dialog, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, protocol, shell, dialog, screen } = require('electron');
 const path = require('path');
 const fsp = require('fs/promises');
-const { pathToFileURL } = require('url');
 const core = require('./core');
 
 const SELFTEST = process.argv.includes('--selftest');
@@ -43,12 +42,30 @@ function createWindow() {
   win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith('app://')) { e.preventDefault(); shell.openExternal(url); } });
 }
 
+// Sirve un archivo de la interfaz, por trozos si se piden (el vídeo de la intro los necesita para poder moverse).
+const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg',
+  '.ttf': 'font/ttf', '.webm': 'video/webm', '.ogg': 'audio/ogg', '.mp4': 'video/mp4', '.json': 'application/json' };
+async function serveFile(file, range) {
+  let st;
+  try { st = await fsp.stat(file); } catch { return new Response('no existe', { status: 404 }); }
+  const type = TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream';
+  const m = range && /bytes=(\d*)-(\d*)/.exec(range);
+  if (!m) return new Response(require('stream').Readable.toWeb(require('fs').createReadStream(file)),
+    { status: 200, headers: { 'Content-Type': type, 'Content-Length': String(st.size), 'Accept-Ranges': 'bytes' } });
+  let a = m[1] === '' ? Math.max(0, st.size - Number(m[2])) : Number(m[1]);
+  let b = m[1] !== '' && m[2] !== '' ? Number(m[2]) : st.size - 1;
+  b = Math.min(b, st.size - 1);
+  if (a > b) return new Response('', { status: 416, headers: { 'Content-Range': `bytes */${st.size}` } });
+  return new Response(require('stream').Readable.toWeb(require('fs').createReadStream(file, { start: a, end: b })), {
+    status: 206, headers: { 'Content-Type': type, 'Content-Length': String(b - a + 1), 'Content-Range': `bytes ${a}-${b}/${st.size}`, 'Accept-Ranges': 'bytes' } });
+}
+
 app.whenReady().then(async () => {
   protocol.handle('app', req => {
     const rel = decodeURIComponent(new URL(req.url).pathname).replace(/^\/+/, '');
     const file = path.normalize(path.join(RENDERER, rel));
     if (!file.startsWith(RENDERER)) return new Response('no', { status: 403 });
-    return net.fetch(pathToFileURL(file).toString());
+    return serveFile(file, req.headers.get('range'));
   });
   settings = await core.loadSettings();
   setTarget(core.targetFromSettings(settings, await core.detectTargets()), false);
