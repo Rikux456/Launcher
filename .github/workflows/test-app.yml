@@ -36,6 +36,12 @@ jobs:
         working-directory: app
         shell: bash
         run: npx electron-builder --win nsis --publish never && ls -la dist
+      - name: Guardar el instalador de prueba
+        uses: actions/upload-artifact@v4
+        with:
+          name: Derisomod-Launcher-prueba
+          path: app/dist/*.exe
+          retention-days: 14
       - name: Subir capturas a la rama ci-capturas
         if: always()
         shell: bash
