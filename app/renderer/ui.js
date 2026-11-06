@@ -147,19 +147,30 @@
 
   // ---------- música del menú (bucle sin cortes) ----------
   const MUSIC = 'media/musica_menu_bucle.ogg', MUSIC_AT = 52.6;
-  let actx, gain, musicVol = 0.3, muted = false;
-  async function startMusic(fadeIn) {
+  let actx, gain, musicVol = 0.3, muted = false, musicStarted = false;
+  // la música se prepara nada más abrir, para que entre justo a la vez que la animación
+  let musicBuf = null;
+  function loadMusic() {
+    if (!musicBuf) musicBuf = (async () => { actx = actx || new AudioContext(); return actx.decodeAudioData(await (await fetch(MUSIC)).arrayBuffer()); })();
+    return musicBuf;
+  }
+  async function startMusic(fadeIn, at = MUSIC_AT) {
+    if (musicStarted) return; musicStarted = true;
     try {
-      actx = actx || new AudioContext();
-      const buf = await actx.decodeAudioData(await (await fetch(MUSIC)).arrayBuffer());
+      const buf = await loadMusic();
       const src = actx.createBufferSource(); src.buffer = buf; src.loop = true;
       gain = actx.createGain(); src.connect(gain).connect(actx.destination);
       const v = muted ? 0 : musicVol;
       if (fadeIn) { gain.gain.setValueAtTime(0, actx.currentTime); gain.gain.linearRampToValueAtTime(v, actx.currentTime + 1.5); } else gain.gain.value = v;
-      src.start(0, MUSIC_AT % buf.duration);
+      src.start(0, at % buf.duration);
     } catch { /* sin música (p. ej. si falta el archivo) */ }
   }
-  function applyVolume() { if (gain && actx) gain.gain.setTargetAtTime(muted ? 0 : musicVol, actx.currentTime, .15); $('bmute').style.opacity = muted ? .45 : 1; }
+  function applyVolume() {
+    if (gain && actx) gain.gain.setTargetAtTime(muted ? 0 : musicVol, actx.currentTime, .15);
+    if (sfx) sfx.volume = muted ? 0 : musicVol * .85;
+    const v = $('introv'); if (v && !v.muted) v.volume = muted ? 0 : musicVol;
+    $('bmute').style.opacity = muted ? .45 : 1;
+  }
   $('bmute').onclick = () => { muted = !muted; L.setPref('musicMuted', muted); applyVolume(); };
 
   // ---------- ajustes ----------
@@ -207,7 +218,10 @@
   let introBlob = null;
   async function introUrl() { if (!introBlob) introBlob = URL.createObjectURL(await (await fetch(INTRO)).blob()); return introBlob; }
   // short = solo desde que cae la estrella, un poco más rápido (cada vez que se abre, salvo la intro entera)
-  const FALL_AT = 50.0, FALL_SPEED = 1.4;
+  // en la versión corta el vídeo va sin sonido: la música sigue a su velocidad (desde donde va la canción en ese
+  // punto: el ogg va 3,025 s por detrás del vídeo) y los efectos de la caída van aparte, rápidos pero sin cambiar el tono
+  const FALL_AT = 50.0, FALL_SPEED = 1.4, MUSIC_LAG = 55.625 - MUSIC_AT, SFX_AT = 50.208;
+  let sfx = null;
   async function playIntro(short) {
     const intro = $('intro'), v = $('introv');
     intro.classList.remove('hide');
@@ -215,9 +229,12 @@
     if (short) {
       v.style.opacity = 0;   // entra desde negro
       await new Promise(r => { v.onloadedmetadata = r; if (v.readyState >= 1) r(); });
-      v.currentTime = FALL_AT; v.playbackRate = FALL_SPEED;
+      v.currentTime = FALL_AT; v.playbackRate = FALL_SPEED; v.muted = true;
       await new Promise(r => { v.onseeked = r; setTimeout(r, 1500); });
       requestAnimationFrame(() => { v.style.opacity = 1; });
+      startMusic(true, FALL_AT - MUSIC_LAG);
+      sfx = new Audio('sfx_transicion.ogg'); sfx.preservesPitch = true; sfx.playbackRate = FALL_SPEED; sfx.volume = muted ? 0 : musicVol * .85;
+      setTimeout(() => sfx.play().catch(() => {}), (SFX_AT - FALL_AT) / FALL_SPEED * 1000);
     }
     $('fade').style.opacity = 0;
     v.volume = muted ? 0 : musicVol;
@@ -279,6 +296,7 @@
 
   // ---------- arranque ----------
   (async () => {
+    loadMusic().catch(() => {});
     info = await L.init();
     $('ver').textContent = 'launcher ' + info.version;
     setTargetLabel(info.target);
