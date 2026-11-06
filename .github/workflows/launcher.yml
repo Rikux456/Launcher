@@ -1,13 +1,10 @@
 name: Compilar launcher
 
-# Cada vez que cambias launcher-src/ (o lo lanzas a mano desde Actions) compila el launcher
-# y, si LAUNCHER_VERSION es nueva, lo publica en Releases como v<versión>:
-#  - <Nombre>-Launcher-Windows.zip : carpeta con .exe y Java incluido (no hace falta instalar Java)
-#  - <Nombre>-Launcher.jar         : para quien ya tenga Java 21 (Windows, Mac o Linux)
+# Cuando cambia la versión de app/package.json: monta el instalador del launcher (Electron) y crea la release v<versión>.
+#  - Derisomod-Launcher-Setup-<versión>.exe + latest.yml : el launcher nuevo (se actualiza solo con estos archivos)
+#  - Derisomod-Launcher.jar : puente para los launchers Java 1.4, que lo descargan solos e instalan el nuevo
 on:
-  push:
-    branches: [main]
-    paths: ["launcher-src/**", ".github/workflows/launcher.yml"]
+  # (mientras se prueba la 2.0.0, solo a mano; luego vuelve a ser automático al cambiar la versión)
   workflow_dispatch:
 
 permissions:
@@ -16,42 +13,52 @@ permissions:
 jobs:
   build:
     runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
+      - name: Versión
+        id: ver
+        shell: bash
+        run: |
+          V=$(node -p "require('./app/package.json').version")
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          if gh release view "v$V" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/setup-node@v4
+        if: steps.ver.outputs.exists == 'false'
+        with:
+          node-version: "22"
       - uses: actions/setup-java@v5
+        if: steps.ver.outputs.exists == 'false'
         with:
           distribution: temurin
           java-version: "21"
-      - name: Leer versión
-        id: ver
+      - name: Intro y música
+        if: steps.ver.outputs.exists == 'false'
         shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          VERSION=$(grep -oP 'LAUNCHER_VERSION = "\K[0-9.]+' launcher-src/Launcher.java)
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          if gh release view "v$VERSION" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Compilar
+        run: .github/scripts/media.sh app/renderer/media obligatorio
+      - name: Instalador
+        if: steps.ver.outputs.exists == 'false'
+        working-directory: app
         shell: bash
         run: |
-          .github/scripts/build-launcher.sh "${{ steps.ver.outputs.version }}"
-          cd build/app && 7z a ../../dist/Derisomod-Launcher-Windows.zip "Derisomod Launcher"
+          npm install --no-audit --no-fund
+          npx electron-builder --win nsis --publish never
+      - name: Puente para los launchers Java
+        if: steps.ver.outputs.exists == 'false'
+        shell: bash
+        run: |
+          mkdir -p build/bridge
+          javac -encoding UTF-8 --release 21 -d build/bridge launcher-src/bridge/Launcher.java
+          printf "Main-Class: Launcher\n" > build/bridge.txt
+          jar cfm app/dist/Derisomod-Launcher.jar build/bridge.txt -C build/bridge .
       - name: Publicar release
         if: steps.ver.outputs.exists == 'false'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.ver.outputs.version }}
-          name: Launcher ${{ steps.ver.outputs.version }}
-          target_commitish: ${{ github.sha }}
-          files: |
-            dist/Derisomod-Launcher-Windows.zip
-            dist/Derisomod-Launcher.jar
-      - name: Guardar como artefacto
-        uses: actions/upload-artifact@v4
-        with:
-          name: launcher
-          path: dist/
+        shell: bash
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          cd app/dist
+          gh release create "v$V" -R "$GITHUB_REPOSITORY" --title "Launcher $V" --target "$GITHUB_SHA" \
+            --notes "Instala **Derisomod-Launcher-Setup-$V.exe** (se actualiza solo a partir de aquí). Si ya tenías el launcher 1.4, se instala solo." \
+            "Derisomod-Launcher-Setup-$V.exe" "Derisomod-Launcher-Setup-$V.exe.blockmap" latest.yml Derisomod-Launcher.jar

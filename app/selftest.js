@@ -1,0 +1,52 @@
+// Prueba automática (Action "Probar launcher"): arranca la app de verdad, saca capturas y prueba la lógica.
+// electron . --selftest   (SELFTEST_OUT = carpeta de resultados)
+'use strict';
+const { app } = require('electron');
+const path = require('path');
+const fsp = require('fs/promises');
+const os = require('os');
+
+module.exports = async function selftest(win, { core, ipc }) {
+  const out = process.env.SELFTEST_OUT || path.join(os.tmpdir(), 'selftest');
+  await fsp.mkdir(out, { recursive: true });
+  const log = [];
+  const say = (...a) => { const s = a.join(' '); log.push(s); console.log(s); };
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const js = code => win.webContents.executeJavaScript(code, true);
+  const shot = async name => { const img = await win.webContents.capturePage(); await fsp.writeFile(path.join(out, name + '.png'), img.toPNG()); say('captura', name); };
+  win.webContents.on('console-message', (_e, level, msg) => { if (level >= 2) say('[pagina]', msg); });
+  win.webContents.on('render-process-gone', (_e, d) => say('RENDER CAIDO', JSON.stringify(d)));
+  let ok = true;
+  const step = async (name, fn) => { try { await fn(); say('OK   ', name); } catch (e) { ok = false; say('FALLO', name, '-', e && e.stack || e); } };
+  try {
+    say('versiones', JSON.stringify({ electron: process.versions.electron, node: process.versions.node, chrome: process.versions.chrome }));
+    await new Promise(r => win.webContents.once('did-finish-load', r));
+    win.setSize(1880, 1040); win.center();
+    await wait(8000);
+    await step('interfaz', async () => { await shot('1_launcher'); say('estado:', await js('window.__ui.status()')); });
+    await step('rey agujero negro', async () => { await js('window.REY_M=1'); await wait(2500); await shot('2_rey_agujero'); await js('window.REY_M=0.6'); await wait(2500); await shot('3_rey_cambio'); await js('window.REY_M=null'); });
+    await step('menu se abre con', async () => { await js("document.getElementById('open').click()"); await wait(1500); await shot('4_menu'); await js("document.querySelector('.menu')&&document.querySelector('.menu').remove()"); });
+    await step('aviso', async () => { js("window.__ui.dialog('¿Con qué launcher juegas?','Se creará la instancia de Derisomod con NeoForge ya instalado; no tienes que configurar nada.',[{label:'Launcher oficial'},{label:'Modrinth',main:true}])"); await wait(1200); await shot('5_aviso'); await js("document.querySelector('.modal')&&document.querySelector('.modal').remove()"); });
+    await step('intro', async () => {
+      await js("document.getElementById('intro').classList.remove('hide');document.getElementById('intro').style.opacity=1;const v=document.getElementById('introv');v.style.opacity=1;v.src='media/intro_launcher.webm';v.currentTime=20;v.play()");
+      await wait(3000); await shot('6_intro'); say('intro reproduciendo:', await js("!document.getElementById('introv').paused && document.getElementById('introv').currentTime"));
+      await js("const v=document.getElementById('introv');v.currentTime=55.3;"); await wait(1500); await shot('7_intro_final');
+      await js("const v=document.getElementById('introv');v.pause();document.getElementById('intro').classList.add('hide')");
+    });
+    await step('musica', async () => { say('musica decodificada:', await js("fetch('media/musica_menu_bucle.ogg').then(r=>r.arrayBuffer()).then(b=>new AudioContext().decodeAudioData(b)).then(a=>a.duration)")); });
+    await step('node:sqlite', async () => { const { DatabaseSync } = require('node:sqlite'); const d = new DatabaseSync(':memory:'); say('sqlite', d.prepare('select sqlite_version() v').get().v); d.close(); });
+    await step('mrpack', async () => { say(await core.buildMrpack({ version: 't', minecraft: '1.21.1', neoforge: '21.1.262' })); });
+    await step('modpack real (comprobar + descargar + volver a comprobar)', async () => {
+      const dir = path.join(os.tmpdir(), 'derisomod-selftest-game');
+      await fsp.rm(dir, { recursive: true, force: true });
+      const m = await core.fetchManifest(); say('manifest', m.version, 'commit', m.commit);
+      let p = await core.plan(dir, m); say('plan', p.downloads.length, 'archivos', (p.bytes / 1048576).toFixed(1), 'MB');
+      await core.apply(dir, p, () => {});
+      p = await core.plan(dir, m); if (!core.upToDate(p)) throw new Error('tras descargar no está al día');
+    });
+    await step('comprobar desde la interfaz', async () => { await js('window.__ui.check()'); await wait(4000); say('estado:', await js('window.__ui.status()')); await shot('8_comprobado'); });
+  } catch (e) { ok = false; say('FALLO GENERAL', e && e.stack || e); }
+  say(ok ? 'RESULTADO: OK' : 'RESULTADO: FALLOS');
+  await fsp.writeFile(path.join(out, 'resultado.txt'), log.join('\n') + '\n');
+  app.exit(ok ? 0 : 1);
+};

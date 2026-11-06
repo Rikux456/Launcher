@@ -1,0 +1,49 @@
+name: Probar launcher
+
+# Se lanza a mano: arranca el launcher en Windows con --selftest (capturas, intro, música, descarga real del modpack)
+# y deja los resultados en la rama "ci-capturas".
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Intro y música
+        shell: bash
+        run: .github/scripts/media.sh app/renderer/media
+      - name: Instalar
+        working-directory: app
+        run: npm install --no-audit --no-fund
+      - name: Prueba automática
+        working-directory: app
+        shell: bash
+        run: |
+          export SELFTEST_OUT="$GITHUB_WORKSPACE/selftest_out"
+          npx electron . --selftest || echo "SELFTEST_FALLO=1" >> "$GITHUB_ENV"
+          cat "$SELFTEST_OUT/resultado.txt" || true
+      - name: Instalador (comprobar que se monta)
+        working-directory: app
+        shell: bash
+        run: npx electron-builder --win nsis --publish never && ls -la dist
+      - name: Subir capturas a la rama ci-capturas
+        if: always()
+        shell: bash
+        run: |
+          cd selftest_out
+          git init -q && git checkout -q -b ci-capturas && git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898283+github-actions[bot]@users.noreply.github.com" commit -qm "Capturas $GITHUB_RUN_ID"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ci-capturas
+      - name: Resultado
+        shell: bash
+        run: test -z "${SELFTEST_FALLO:-}"

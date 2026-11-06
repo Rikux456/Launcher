@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Derisomod Launcher</title>
+<style>
+@font-face{font-family:Corm;src:url(fonts/Cormorant.ttf);font-weight:300 700}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:#050819;overflow:hidden}body{width:1880px;height:1040px;overflow:hidden;transform-origin:0 0;font-family:"DejaVu Serif",serif;color:#e8ecff;
+ background:radial-gradient(ellipse at 20% 100%,#122063 0%,transparent 55%),radial-gradient(ellipse at 85% 80%,#14205a 0%,transparent 50%),linear-gradient(180deg,#050819 0%,#0a1238 70%,#0d1848 100%);position:relative}
+canvas,.art{position:absolute;pointer-events:none}
+#stars{left:0;top:0}
+
+.artwrap{left:52px;top:102px;width:1776px;-webkit-mask:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.artwrap img{width:100%;display:block;-webkit-mask:linear-gradient(180deg,#000 70%,transparent 74%)}
+.veil{position:absolute;pointer-events:none}
+/* pupils */
+.pupil{position:absolute;width:0;height:0}
+.pupil i{position:absolute;border-radius:50%;transform:translate(-50%,-50%)}
+.eye{position:absolute;width:0;height:0}
+.eye svg{position:absolute;left:-30px;top:-15px;overflow:visible}
+.eye .glow{animation:pulse 3.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.55}50%{opacity:.95}}
+/* UI */
+.title{position:absolute;left:92px;top:78px;font-family:Corm;font-weight:600;font-size:170px;line-height:1;color:#f2f5ff;text-shadow:0 0 30px rgba(140,170,255,.55)}
+.i{position:relative;display:inline-block}
+.star{position:absolute;left:50%;top:.27em;width:0;height:0}
+.star:before{content:"";position:absolute;width:230px;height:2px;left:-115px;top:-1px;background:linear-gradient(90deg,transparent,rgba(210,225,255,.9),transparent)}
+.star:after{content:"";position:absolute;height:170px;width:2px;top:-85px;left:-1px;background:linear-gradient(180deg,transparent,rgba(210,225,255,.9),transparent)}
+.core{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 12px 6px rgba(200,220,255,.9),0 0 40px 14px rgba(120,160,255,.5)}
+.sm{transform:rotate(45deg);position:absolute;left:0;top:0}
+.sm:before,.sm:after{content:"";position:absolute;background:rgba(210,225,255,.55)}
+.sm:before{width:40px;height:2px;left:-20px;top:-1px}.sm:after{width:2px;height:40px;left:-1px;top:-20px}
+.sub{position:absolute;left:100px;top:300px;letter-spacing:4px;font-size:21px;color:#9aa6d6}
+.open{position:absolute;left:100px;top:343px;font-size:22px;color:#9aa6d6}.open b{color:#e8ecff;font-weight:normal}
+.news{position:absolute;left:908px;top:115px;width:864px}
+.news h2{font-weight:normal;font-size:38px;display:flex;align-items:center;gap:18px}
+.news h2:after{content:"";flex:1;height:1px;background:rgba(160,180,255,.35)}
+.item{padding:16px 0 18px;border-bottom:1px solid rgba(160,180,255,.15)}
+.item .t{font-size:25px;display:flex;justify-content:space-between}.item .t i{font-style:normal;color:#9fb3ff}
+.item .t span{font-size:19px;color:#9aa6d6}
+.item p{font-size:21px;color:#9aa6d6;margin-top:8px;line-height:1.5}
+.status{position:absolute;left:100px;top:795px;font-size:24px;color:#d8defa}
+.bar{position:absolute;left:100px;top:845px;width:1678px;height:4px;border-radius:2px;background:linear-gradient(90deg,#4a6cff,#a9c0ff);box-shadow:0 0 10px rgba(120,150,255,.6)}
+.bar:after{content:"";position:absolute;right:-6px;top:-5px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 14px 6px rgba(170,200,255,.8)}
+.btn{font:inherit;color:inherit;cursor:pointer;transition:background .2s,border-color .2s,color .2s,box-shadow .2s;position:absolute;top:892px;height:83px;border:1px solid rgba(150,170,255,.3);background:rgba(8,12,40,.55);display:flex;align-items:center;justify-content:center;font-size:29px;border-radius:3px}
+.b1{left:100px;width:240px}.b2{left:356px;width:280px}.b3{left:1121px;width:302px;color:#56608a;border-color:rgba(150,170,255,.12)}
+.b4{left:1445px;top:880px;width:338px;height:107px;font-size:42px;border:2px solid rgba(170,190,255,.7);box-shadow:0 0 24px rgba(110,140,255,.35),inset 0 0 30px rgba(90,120,255,.25);background:rgba(20,35,100,.6)}
+.ver{position:absolute;right:28px;bottom:16px;font-size:18px;color:#56608a}
+
+html{background:#050819;overflow:hidden}
+body{transform-origin:0 0}
+.scene{position:absolute;left:0;top:-9px;width:1880px;height:1058px}
+.scene>*{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+.clk{animation:clk 4s ease-in-out infinite}@keyframes clk{0%,100%{opacity:.9}50%{opacity:1;filter:brightness(1.12)}}
+.scene>*{transform-origin:50% 50%;will-change:transform}
+
+
+/* ===== launcher real ===== */
+.btn:hover{background:rgba(30,45,120,.65);border-color:rgba(170,190,255,.6)}
+.btn:active{transform:translateY(1px)}
+.btn.off{color:#56608a;border-color:rgba(150,170,255,.12);background:rgba(8,12,40,.55);cursor:default;box-shadow:none}
+.b3.on{color:#e8ecff;border:2px solid rgba(170,190,255,.7);box-shadow:0 0 24px rgba(110,140,255,.35),inset 0 0 30px rgba(90,120,255,.25);background:rgba(20,35,100,.6)}
+.b4:hover{box-shadow:0 0 40px rgba(130,160,255,.6),inset 0 0 40px rgba(110,140,255,.35)}
+.b4.off{font-size:42px;border:2px solid rgba(170,190,255,.2);box-shadow:none}
+.open{cursor:pointer;user-select:none}.open:hover b{text-decoration:underline}
+.bar{width:calc(1678px * var(--p,1));transition:width .25s}
+.bar.zero:after{display:none}
+.bar.busy{background:linear-gradient(90deg,#4a6cff,#a9c0ff,#4a6cff);background-size:200% 100%;animation:barflow 1.2s linear infinite}
+@keyframes barflow{to{background-position:-200% 0}}
+.barbg{position:absolute;left:100px;top:845px;width:1678px;height:4px;border-radius:2px;background:rgba(120,140,255,.12)}
+.news .list{max-height:415px;overflow-y:auto;padding-right:14px;-webkit-mask:linear-gradient(180deg,#000 85%,transparent)}
+.news .list::-webkit-scrollbar{width:6px}.news .list::-webkit-scrollbar-thumb{background:rgba(160,180,255,.25);border-radius:3px}
+.news .empty{color:#56608a;font-size:21px;padding:18px 0}
+/* barra de la ventana */
+.drag{position:absolute;left:0;top:0;width:1880px;height:64px;-webkit-app-region:drag;z-index:30}
+.wctl{position:absolute;right:14px;top:10px;display:flex;gap:4px;z-index:31;-webkit-app-region:no-drag}
+.wctl button,.tools button{background:none;border:0;color:#9aa6d6;font:22px "DejaVu Sans",sans-serif;width:52px;height:40px;cursor:pointer;border-radius:4px}
+.wctl button:hover,.tools button:hover{background:rgba(120,140,255,.15);color:#fff}.wctl .x:hover{background:rgba(220,60,80,.55)}
+.tools{position:absolute;right:190px;bottom:6px;display:flex;gap:2px;z-index:6}
+.tools button{font-size:20px;width:44px;height:36px}
+.ver{z-index:6}
+/* menús y avisos */
+.menu{position:absolute;left:100px;top:385px;min-width:560px;z-index:40;background:rgba(10,16,52,.96);border:1px solid rgba(150,170,255,.35);border-radius:6px;padding:8px 0;box-shadow:0 20px 60px rgba(0,0,0,.6);font-size:21px}
+.menu div{padding:11px 24px;cursor:pointer;color:#cfd8ff;white-space:nowrap}.menu div:hover{background:rgba(70,95,220,.35);color:#fff}
+.menu .cur{color:#fff}.menu .cur:before{content:"✓ ";color:#a9c0ff}.menu hr{border:0;border-top:1px solid rgba(150,170,255,.18);margin:6px 0}
+.menu .hint{cursor:default;color:#56608a;font-size:18px}.menu .hint:hover{background:none;color:#56608a}
+.pop{position:absolute;right:140px;bottom:52px;z-index:40;background:rgba(10,16,52,.96);border:1px solid rgba(150,170,255,.35);border-radius:6px;padding:18px 24px;font-size:20px;color:#cfd8ff;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.pop label{display:flex;gap:12px;align-items:center;cursor:pointer;margin:6px 0}.pop input{width:20px;height:20px;accent-color:#6f8cff}
+.pop a{color:#a9c0ff;cursor:pointer;display:block;margin-top:10px}
+.modal{position:absolute;inset:0;z-index:50;background:rgba(3,5,18,.55);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.dlg{width:860px;background:linear-gradient(180deg,rgba(14,22,70,.97),rgba(8,12,40,.97));border:1px solid rgba(170,190,255,.45);border-radius:6px;padding:40px 48px 36px;box-shadow:0 0 60px rgba(90,120,255,.25),0 30px 80px rgba(0,0,0,.7)}
+.dlg h3{font-family:Corm;font-weight:600;font-size:46px;color:#f2f5ff;margin-bottom:16px;text-shadow:0 0 20px rgba(140,170,255,.45)}
+.dlg p{font-size:23px;line-height:1.5;color:#c6cff5;white-space:pre-wrap}
+.dlg .row{display:flex;gap:14px;justify-content:flex-end;margin-top:32px;flex-wrap:wrap}
+.dlg button{font:24px "DejaVu Serif",serif;color:#e8ecff;padding:16px 30px;border:1px solid rgba(150,170,255,.35);background:rgba(8,12,40,.6);border-radius:3px;cursor:pointer}
+.dlg button:hover{background:rgba(30,45,120,.7)}.dlg button.main{border:2px solid rgba(170,190,255,.75);background:rgba(20,35,100,.75);box-shadow:0 0 20px rgba(110,140,255,.35)}
+.banner{position:absolute;left:100px;top:740px;z-index:6;font-size:20px;color:#a9c0ff;cursor:pointer}.banner:hover{text-decoration:underline}
+/* intro */
+#intro{position:absolute;left:0;top:0;width:1880px;height:1040px;z-index:60;background:#000;transition:opacity .3s}
+#intro video{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .4s}
+#intro .skip{position:absolute;right:40px;bottom:30px;font-size:18px;color:rgba(200,210,255,.45);letter-spacing:2px;opacity:0;transition:opacity 1s}
+#intro:hover .skip{opacity:1}
+#fade{position:absolute;inset:0;z-index:59;background:#000;pointer-events:none;transition:opacity .8s}
+.hide{display:none!important}
+</style></head><body>
+<div class="scene"><img src="bg_clean.jpg" data-d="10"><canvas id="sky" width="1672" height="941" data-d="14"></canvas><canvas id="halo" width="1672" height="941" data-d="22"></canvas><canvas id="clock" width="1672" height="941" data-d="22"></canvas><canvas id="silc" width="1672" height="941" data-d="34"></canvas><canvas id="neb" width="1672" height="941" style="mix-blend-mode:screen" data-d="34"></canvas><canvas id="rey" width="1880" height="1058" data-d="34"></canvas></div>
+<div class="veil" style="left:880px;top:110px;width:920px;height:540px;background:radial-gradient(ellipse at center,rgba(6,10,34,.55) 40%,transparent 75%)"></div>
+<div class="veil" style="left:30px;top:250px;width:760px;height:160px;background:radial-gradient(ellipse at 40% 50%,rgba(6,10,34,.75) 35%,transparent 72%)"></div>
+<div class="veil" style="left:40px;top:760px;width:700px;height:90px;background:radial-gradient(ellipse at 40% 50%,rgba(6,10,34,.7) 35%,transparent 72%)"></div>
+<div class="drag"></div>
+<div class="wctl"><button id="wmin" title="Minimizar">–</button><button id="wclose" class="x" title="Cerrar">✕</button></div>
+<div class="title">Der<span class="i">ı<span class="star"><span class="core"></span><span class="sm"></span></span></span>so</div>
+<div class="sub">MODPACK · MINECRAFT 1.21.1 · NEOFORGE</div>
+<div class="open" id="open">Se abre con <b id="tname">…</b> ▾</div>
+<div class="news"><h2>Novedades</h2><div class="list" id="news"><div class="empty">Cargando novedades…</div></div></div>
+<div class="banner hide" id="banner"></div>
+<div class="status" id="status">Comprobando actualizaciones…</div>
+<div class="barbg"></div><div class="bar zero" id="bar" style="--p:0"></div>
+<button class="btn b1" id="bcheck">Comprobar</button><button class="btn b2" id="bfolder">Abrir carpeta</button><button class="btn b3 off" id="bupdate">Actualizar</button><button class="btn b4 off" id="bplay">Jugar</button>
+<div class="tools"><button id="bmute" title="Música">♪</button><button id="bprefs" title="Ajustes">⚙</button></div>
+<div class="ver" id="ver"></div>
+<div id="layer"></div>
+<div id="fade"></div>
+<div id="intro" class="hide"><video id="introv" preload="auto" playsinline></video><div class="skip">CLIC O ESC PARA SALTAR</div></div>
+
+<script>function fit(){const s=Math.min(innerWidth/1880,innerHeight/1040);document.body.style.transform=`scale(${s})`;}addEventListener('resize',fit);fit();</script>
+<script>(function(){const T0=Number(new URLSearchParams(location.search).get('t')||0);const c=document.getElementById('sky').getContext('2d');
+let s=7;const r=()=>(s=(s*16807)%2147483647)/2147483647;const st=[];
+for(let i=0;i<320;i++){const big=r()<.12;st.push({x:r()*1672,y:r()*760,z:big?1.1+r()*.9:.35+r()*.8,p:r()*6.28,v:big?.25+r()*.5:.6+r()*2,big,hue:r()});}
+const t0=performance.now();
+function f(n){const t=T0||(n-t0)/1000;c.clearRect(0,0,1672,941);
+ for(const o of st){let a=.5+.5*Math.sin(t*o.v+o.p);
+  if(o.big){a=Math.pow(a,3);const col=o.hue<.6?'215,228,255':o.hue<.8?'170,200,255':'255,235,210';
+   const g=c.createRadialGradient(o.x,o.y,0,o.x,o.y,o.z*7);g.addColorStop(0,`rgba(${col},${a})`);g.addColorStop(.25,`rgba(${col},${a*.45})`);g.addColorStop(1,`rgba(${col},0)`);
+   c.fillStyle=g;c.beginPath();c.arc(o.x,o.y,o.z*7,0,7);c.fill();
+   const L=o.z*14*a;c.strokeStyle=`rgba(${col},${a*.7})`;c.lineWidth=.8;c.beginPath();c.moveTo(o.x-L,o.y);c.lineTo(o.x+L,o.y);c.moveTo(o.x,o.y-L);c.lineTo(o.x,o.y+L);c.stroke();
+  } else {c.fillStyle=`rgba(215,228,255,${.08+.62*a})`;c.beginPath();c.arc(o.x,o.y,o.z,0,7);c.fill();}}
+ if(!T0)requestAnimationFrame(f);}requestAnimationFrame(f);})();</script>
+<script>const HALO_HINV=[[1.5006849597920886, 0.1309851264614793, -183.51082130378657], [-0.3405231388253832, 1.579661781551343, 177.58734395419862], [-0.0002727481861316235, 0.00010934402736106933, 1.0446003101587231]];</script>
+<script src="halo.js"></script>
+<script>const CLOCK_HINV=[[2.3504626254920136, -0.044179752043657455, -2575.1641908292854], [0.43221783417094234, 2.0524564406964947, -492.3404810755007], [0.0003380057184685051, 0.00011147870642012676, 0.6286060832843167]];</script>
+<script src="clock.js"></script>
+<script src="chars.js"></script>
+<script src="rey.js"></script>
+<script>(function(){ // parallax: ratón + deriva lenta; las capas lejanas se mueven menos. Quieto hasta que se revela el launcher.
+const L=[...document.querySelectorAll('.scene>[data-d]')]; let mx=0,my=0,cx=0,cy=0,st=null;
+addEventListener('mousemove',e=>{if(st==null)return;mx=e.clientX/innerWidth*2-1;my=e.clientY/innerHeight*2-1;});
+addEventListener('mouseleave',()=>{mx=0;my=0;});
+window.sceneStart=()=>{st=performance.now();};
+function f(n){const t=st==null?0:(n-st)/1000; cx+=(mx-cx)*.05; cy+=(my-cy)*.05;
+ const ix=Math.sin(t*.13)*.25, iy=Math.cos(t*.11)*.18;
+ const rot=Math.sin(t*.1)*3, dx=Math.sin(t*.08)*45, dy=Math.cos(t*.07)*20, zs=1.21+.03*Math.sin(t*.05);
+ for(const el of L){const d=+el.dataset.d; let tr=`translate(${-(cx+ix)*d}px,${-(cy+iy)*d*.6}px)`;
+  if(d<=14) tr+=` translate(${dx*(d/14)}px,${dy*(d/14)}px) rotate(${rot*(d===10?1:.7)}deg) scale(${zs})`;
+  else tr+=` scale(${1.045+d*.0004})`;
+  el.style.transform=tr;}
+ requestAnimationFrame(f);} requestAnimationFrame(f);})();</script>
+<script src="ui.js"></script>
+</body></html>
