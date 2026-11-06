@@ -194,10 +194,14 @@
     fade.style.opacity = 0;
     afterReveal();
   }
-  function playIntro() {
+  // la intro se carga entera en memoria (9 MB del disco): así el vídeo nunca se queda esperando datos
+  let introBlob = null;
+  async function introUrl() { if (!introBlob) introBlob = URL.createObjectURL(await (await fetch(INTRO)).blob()); return introBlob; }
+  async function playIntro() {
     const intro = $('intro'), v = $('introv');
     intro.classList.remove('hide'); $('fade').style.opacity = 0;
-    v.src = INTRO; v.volume = muted ? 0 : musicVol;
+    try { v.src = await introUrl(); } catch { reveal(true); return; }
+    v.volume = muted ? 0 : musicVol;
     v.onended = () => reveal(false);
     v.onerror = () => reveal(true);
     v.play().catch(() => reveal(true));
@@ -246,5 +250,5 @@
   })();
 
   // ganchos para la prueba automática (solo con --selftest)
-  window.__ui = { reveal, check: () => check(false), status: () => statusEl.textContent, playIntro, dialog };
+  window.__ui = { reveal, check: () => check(false), status: () => statusEl.textContent, playIntro, dialog, introUrl };
 })();

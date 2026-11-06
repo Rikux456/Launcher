@@ -31,7 +31,7 @@ module.exports = async function selftest(win, { core, ipc }) {
     await step('aviso', async () => { js("window.__ui.dialog('¿Con qué launcher juegas?','Se creará la instancia de Derisomod con NeoForge ya instalado; no tienes que configurar nada.',[{label:'Launcher oficial'},{label:'Modrinth',main:true}])"); await wait(1200); await shot('5_aviso'); await js("document.querySelector('.modal')&&document.querySelector('.modal').remove()"); });
     await step('archivos de la intro', async () => { const d = path.join(__dirname, 'renderer', 'media'); for (const f of await fsp.readdir(d)) say('  media:', f, (await fsp.stat(path.join(d, f))).size); });
     await step('intro', async () => {
-      await js("{document.getElementById('intro').classList.remove('hide');document.getElementById('intro').style.opacity=1;const v=document.getElementById('introv');v.style.opacity=1;v.src='media/intro_launcher.webm';v.play().then(()=>{v.currentTime=20})}");
+      await js("{document.getElementById('intro').classList.remove('hide');document.getElementById('intro').style.opacity=1;const v=document.getElementById('introv');v.style.opacity=1;window.__ui.introUrl().then(u=>{v.src=u;return v.play()}).then(()=>{v.currentTime=20})}");
       await wait(3000); await shot('6_intro');
       const diag = await js(`(async()=>{const v=document.getElementById('introv');const out=[];
         const meas=()=>{const c=document.createElement('canvas');c.width=160;c.height=90;const g=c.getContext('2d');g.drawImage(v,0,0,160,90);const d=g.getImageData(0,0,160,90).data;let s=0;for(let i=0;i<d.length;i+=4)s+=(d[i]+d[i+1]+d[i+2])/3;return Math.round(s/(d.length/4));};
