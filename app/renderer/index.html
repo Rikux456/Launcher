@@ -98,6 +98,23 @@ body{transform-origin:0 0}
 #intro video{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .4s}
 #intro .skip{position:absolute;right:40px;bottom:30px;font-size:18px;color:rgba(200,210,255,.45);letter-spacing:2px;opacity:0;transition:opacity 1s}
 #intro:hover .skip{opacity:1}
+
+/* selector de juegos (abajo a la izquierda) */
+@font-face{font-family:Pirata;src:url(fonts/PirataOne-Regular.ttf)}
+.games{position:absolute;left:100px;top:880px;display:flex;gap:18px;z-index:7}
+.game{position:relative;width:107px;height:107px;border-radius:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+ background:rgba(8,12,40,.55);border:1px solid rgba(150,170,255,.2);transition:border-color .25s,box-shadow .25s,background .25s}
+.game svg{width:84px;height:84px;overflow:visible}
+.game.sel{background:rgba(20,35,100,.6);border:2px solid rgba(170,190,255,.75);box-shadow:0 0 26px rgba(110,140,255,.45)}
+.game:not(.sel) .art{filter:grayscale(1) brightness(.55);opacity:.7;transition:filter .25s,opacity .25s}
+.game:hover .art{filter:none;opacity:1}
+.game .rim{opacity:0;transition:opacity .25s}.game:hover .rim{opacity:1}
+.game .tip{position:absolute;left:0;bottom:118px;white-space:nowrap;font-size:18px;letter-spacing:2px;color:#cfd8ff;
+ background:rgba(10,16,52,.95);border:1px solid rgba(150,170,255,.35);border-radius:4px;padding:6px 12px;opacity:0;pointer-events:none;transition:opacity .2s}
+.game:hover .tip{opacity:1}
+/* Comprobar y Abrir carpeta, como enlaces encima del estado */
+.b1,.b2{top:742px;height:auto;width:auto;border:0;background:none!important;box-shadow:none;font-size:20px;color:#9aa6d6;padding:0}
+.b1{left:100px}.b2{left:270px}.b1:hover,.b2:hover{color:#fff;background:none}.b1.off{color:#3d4570}
 #fade{position:absolute;inset:0;z-index:59;background:#000;pointer-events:none;transition:opacity .8s}
 .hide{display:none!important}
 </style></head><body>
@@ -108,13 +125,24 @@ body{transform-origin:0 0}
 <div class="drag"></div>
 <div class="wctl"><button id="wmin" title="Minimizar">–</button><button id="wclose" class="x" title="Cerrar">✕</button></div>
 <div class="title">Der<span class="i">ı<span class="star"><span class="core"></span><span class="sm"></span></span></span>so</div>
-<div class="sub">MODPACK · MINECRAFT 1.21.1 · NEOFORGE</div>
+<div class="sub" id="sub">MODPACK · MINECRAFT 1.21.1 · NEOFORGE</div>
 <div class="open" id="open">Se abre con <b id="tname">…</b> ▾</div>
 <div class="news"><h2>Novedades</h2><div class="list" id="news"><div class="empty">Cargando novedades…</div></div></div>
 <div class="banner hide" id="banner"></div>
 <div class="status" id="status">Comprobando actualizaciones…</div>
 <div class="barbg"></div><div class="bar zero" id="bar" style="--p:0"></div>
-<button class="btn b1" id="bcheck">Comprobar</button><button class="btn b2" id="bfolder">Abrir carpeta</button><button class="btn b3 off" id="bupdate">Actualizar</button><button class="btn b4 off" id="bplay">Jugar</button>
+<button class="btn b1" id="bcheck">↻ Comprobar</button><button class="btn b2" id="bfolder">Abrir carpeta</button><button class="btn b3 off" id="bupdate">Actualizar</button><button class="btn b4 off" id="bplay">Jugar</button>
+<svg width="0" height="0" style="position:absolute"><defs>
+<filter id="ig" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="ig2" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7"/></filter>
+<filter id="isoft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
+<linearGradient id="rb" x1="0" y1="0" x2="1" y2="1"><stop offset="0.000" stop-color="hsl(200,100%,80%)"/><stop offset="0.125" stop-color="hsl(240,100%,80%)"/><stop offset="0.250" stop-color="hsl(280,100%,80%)"/><stop offset="0.375" stop-color="hsl(320,100%,80%)"/><stop offset="0.500" stop-color="hsl(360,100%,80%)"/><stop offset="0.625" stop-color="hsl(400,100%,80%)"/><stop offset="0.750" stop-color="hsl(440,100%,80%)"/><stop offset="0.875" stop-color="hsl(480,100%,80%)"/><stop offset="1.000" stop-color="hsl(520,100%,80%)"/><animateTransform attributeName="gradientTransform" type="rotate" from="0 .5 .5" to="360 .5 .5" dur="5s" repeatCount="indefinite"/></linearGradient></defs></svg>
+<div class="games" id="games">
+ <div class="game sel" data-game="minecraft"><div class="tip">MINECRAFT · MODPACK</div><svg viewBox="0 0 128 128"><g class="art"><polygon points="64,18 106,41 106,87 64,110 22,87 22,41" fill="#7a6cff" filter="url(#ig2)" opacity=".45"/>
+    <polygon points="64,18 74.5,23.75 64,29.5 53.5,23.75" fill="#a9c8ff"/><polygon points="53.5,23.75 64,29.5 53.5,35.25 43,29.5" fill="#8fb2ff"/><polygon points="43,29.5 53.5,35.25 43,41 32.5,35.25" fill="#8fb2ff"/><polygon points="32.5,35.25 43,41 32.5,46.75 22,41" fill="#8fb2ff"/><polygon points="74.5,23.75 85,29.5 74.5,35.25 64,29.5" fill="#c9dcff"/><polygon points="64,29.5 74.5,35.25 64,41 53.5,35.25" fill="#7d9cf5"/><polygon points="53.5,35.25 64,41 53.5,46.75 43,41" fill="#a9c8ff"/><polygon points="43,41 53.5,46.75 43,52.5 32.5,46.75" fill="#a9c8ff"/><polygon points="85,29.5 95.5,35.25 85,41 74.5,35.25" fill="#a9c8ff"/><polygon points="74.5,35.25 85,41 74.5,46.75 64,41" fill="#b9a8ff"/><polygon points="64,41 74.5,46.75 64,52.5 53.5,46.75" fill="#a9c8ff"/><polygon points="53.5,46.75 64,52.5 53.5,58.25 43,52.5" fill="#c9dcff"/><polygon points="95.5,35.25 106,41 95.5,46.75 85,41" fill="#c9dcff"/><polygon points="85,41 95.5,46.75 85,52.5 74.5,46.75" fill="#a9c8ff"/><polygon points="74.5,46.75 85,52.5 74.5,58.25 64,52.5" fill="#a9c8ff"/><polygon points="64,52.5 74.5,58.25 64,64 53.5,58.25" fill="#c9dcff"/><polygon points="22,41 32.5,46.75 32.5,58.25 22,52.5" fill="#3b4fc4"/><polygon points="22,52.5 32.5,58.25 32.5,69.75 22,64" fill="#5a4bc8"/><polygon points="22,64 32.5,69.75 32.5,81.25 22,75.5" fill="#5a4bc8"/><polygon points="22,75.5 32.5,81.25 32.5,92.75 22,87" fill="#2f3fa8"/><polygon points="32.5,46.75 43,52.5 43,64 32.5,58.25" fill="#5a4bc8"/><polygon points="32.5,58.25 43,64 43,75.5 32.5,69.75" fill="#3b4fc4"/><polygon points="32.5,69.75 43,75.5 43,87 32.5,81.25" fill="#2f3fa8"/><polygon points="32.5,81.25 43,87 43,98.5 32.5,92.75" fill="#2f3fa8"/><polygon points="43,52.5 53.5,58.25 53.5,69.75 43,64" fill="#2f3fa8"/><polygon points="43,64 53.5,69.75 53.5,81.25 43,75.5" fill="#5a4bc8"/><polygon points="43,75.5 53.5,81.25 53.5,92.75 43,87" fill="#283590"/><polygon points="43,87 53.5,92.75 53.5,104.25 43,98.5" fill="#4a5fd8"/><polygon points="53.5,58.25 64,64 64,75.5 53.5,69.75" fill="#3b4fc4"/><polygon points="53.5,69.75 64,75.5 64,87 53.5,81.25" fill="#3b4fc4"/><polygon points="53.5,81.25 64,87 64,98.5 53.5,92.75" fill="#2f3fa8"/><polygon points="53.5,92.75 64,98.5 64,110 53.5,104.25" fill="#5a4bc8"/><polygon points="106,41 106,52.5 95.5,58.25 95.5,46.75" fill="#1e2678"/><polygon points="95.5,46.75 95.5,58.25 85,64 85,52.5" fill="#1e2678"/><polygon points="85,52.5 85,64 74.5,69.75 74.5,58.25" fill="#1a2068"/><polygon points="74.5,58.25 74.5,69.75 64,75.5 64,64" fill="#1e2678"/><polygon points="106,52.5 106,64 95.5,69.75 95.5,58.25" fill="#2d2a86"/><polygon points="95.5,58.25 95.5,69.75 85,75.5 85,64" fill="#1a2068"/><polygon points="85,64 85,75.5 74.5,81.25 74.5,69.75" fill="#171d5e"/><polygon points="74.5,69.75 74.5,81.25 64,87 64,75.5" fill="#1e2678"/><polygon points="106,64 106,75.5 95.5,81.25 95.5,69.75" fill="#1e2678"/><polygon points="95.5,69.75 95.5,81.25 85,87 85,75.5" fill="#171d5e"/><polygon points="85,75.5 85,87 74.5,92.75 74.5,81.25" fill="#171d5e"/><polygon points="74.5,81.25 74.5,92.75 64,98.5 64,87" fill="#2d2a86"/><polygon points="106,75.5 106,87 95.5,92.75 95.5,81.25" fill="#171d5e"/><polygon points="95.5,81.25 95.5,92.75 85,98.5 85,87" fill="#252e8c"/><polygon points="85,87 85,98.5 74.5,104.25 74.5,92.75" fill="#171d5e"/><polygon points="74.5,92.75 74.5,104.25 64,110 64,98.5" fill="#2d2a86"/>
+    <g filter="url(#ig)"><rect x="45.04" y="77.56" width="6" height="6" fill="#bff0ff"/><rect x="86.2" y="63.3" width="6" height="6" fill="#d8c8ff"/></g><g fill="none" stroke="rgba(220,235,255,.8)" stroke-width="1.2" stroke-linejoin="round"><polygon points="64,18 106,41 64,64 22,41"/><polygon points="22,41 64,64 64,110 22,87"/><polygon points="106,41 106,87 64,110 64,64"/></g></g><g class="rim"><g filter="url(#isoft)"><polygon points="64,18 106,41 106,87 64,110 22,87 22,41" fill="none" stroke="url(#rb)" stroke-width="9" stroke-linejoin="round"/></g><polygon points="64,18 106,41 106,87 64,110 22,87 22,41" fill="none" stroke="url(#rb)" stroke-width="3.2" stroke-linejoin="round"/><polygon points="64,18 106,41 106,87 64,110 22,87 22,41" fill="none" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/><path d="M22 41 L64 64 L106 41 M64 64 L64 110" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.2"/></g></svg></div>
+ <div class="game" data-game="hytale"><div class="tip">HYTALE · PRÓXIMAMENTE</div><svg viewBox="0 0 128 128"><g class="art" filter="url(#ig)"><text x="64" y="104" text-anchor="middle" font-family="Pirata" font-size="112" fill="#e8f2ff" stroke="#9fd0ff" stroke-width="1">H</text></g><g class="rim"><g filter="url(#isoft)"><text x="64" y="104" text-anchor="middle" font-family="Pirata" font-size="112" fill="none" stroke="url(#rb)" stroke-width="7">H</text></g><text x="64" y="104" text-anchor="middle" font-family="Pirata" font-size="112" fill="none" stroke="url(#rb)" stroke-width="2.6">H</text><text x="64" y="104" text-anchor="middle" font-family="Pirata" font-size="112" fill="none" stroke="#fff" stroke-width="1">H</text></g></svg></div>
+</div>
 <div class="tools"><button id="bmute" title="Música">♪</button><button id="bprefs" title="Ajustes">⚙</button></div>
 <div class="ver" id="ver"></div>
 <div id="layer"></div>

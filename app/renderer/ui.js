@@ -246,15 +246,36 @@
   }
   L.onLauncherUpdate(u => { info.updateReady = u.version; if (revealed) launcherReady(u.version); });
 
+  // ---------- selector de juegos (Minecraft / Hytale) ----------
+  let game = 'minecraft', saved = null;
+  function selectGame(g) {
+    if (g === game || busy) return;
+    document.querySelectorAll('.game').forEach(e => e.classList.toggle('sel', e.dataset.game === g));
+    closeMenus();
+    if (g === 'hytale') {
+      saved = { status: statusEl.textContent, p: bar.style.getPropertyValue('--p'), news: $('news').innerHTML,
+        up: !bUpdate.disabled, upOn: bUpdate.classList.contains('on'), play: !bPlay.disabled };
+      $('sub').textContent = 'HYTALE · PRÓXIMAMENTE'; $('open').classList.add('hide');
+      $('news').innerHTML = '<div class="empty">Aquí saldrán los mods y las novedades de Hytale.</div>';
+      setStatus('Hytale · próximamente'); setBar(0); btn(bUpdate, false); bUpdate.classList.remove('on'); btn(bPlay, false); btn(bCheck, false);
+    } else {
+      $('sub').textContent = 'MODPACK · MINECRAFT 1.21.1 · NEOFORGE'; $('open').classList.remove('hide');
+      if (saved) { setStatus(saved.status); setBar(+saved.p || 0); $('news').innerHTML = saved.news; btn(bUpdate, saved.up); bUpdate.classList.toggle('on', saved.upOn); btn(bPlay, saved.play); }
+      btn(bCheck, !busy && !checking);
+    }
+    game = g;
+  }
+  document.querySelectorAll('.game').forEach(e => { e.onclick = () => selectGame(e.dataset.game); });
+
   // ---------- botones ----------
-  bCheck.onclick = () => check(false);
+  bCheck.onclick = () => { if (game === 'minecraft') check(false); };
   bUpdate.onclick = update;
   bPlay.onclick = play;
   $('bfolder').onclick = () => L.openFolder();
   $('open').onclick = targetMenu;
   $('wmin').onclick = () => L.minimize();
   $('wclose').onclick = () => L.close();
-  setInterval(() => { if (revealed && !busy && !checking && plan) check(true); }, 10 * 60000);
+  setInterval(() => { if (revealed && !busy && !checking && plan && game === 'minecraft') check(true); }, 10 * 60000);
 
   // ---------- arranque ----------
   (async () => {
