@@ -41,7 +41,7 @@ module.exports = async function selftest(win, { core, ipc }) {
       say('fotogramas (original: 10 s ~23, 30 s ~45, 55 s ~40):', JSON.stringify(diag));
       if (!diag.some(d => d.lum > 5)) throw new Error('el vídeo no se ve (fotogramas negros)');
       await js("{const v=document.getElementById('introv');v.currentTime=30}"); await wait(1500); await shot('6b_intro_30s'); say('intro reproduciendo:', await js("!document.getElementById('introv').paused && document.getElementById('introv').currentTime"));
-      await js("{const v=document.getElementById('introv');v.currentTime=55.3;}"); await wait(1500); await shot('7_intro_final');
+      await js("{const v=document.getElementById('introv');v.currentTime=48.4;}"); await wait(1500); await shot('7_intro_final');
       say('salto al final:', await js("document.getElementById('introv').currentTime")); await js("{const v=document.getElementById('introv');v.pause();document.getElementById('intro').classList.add('hide')}");
     });
     await step('musica', async () => { const d = await js("fetch('media/musica_menu_bucle.ogg').then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer()}).then(b=>new AudioContext().decodeAudioData(b)).then(a=>a.duration).catch(e=>'ERROR '+e.message)"); say('musica decodificada (s):', d); if (typeof d !== 'number') throw new Error(String(d)); });
@@ -54,6 +54,12 @@ module.exports = async function selftest(win, { core, ipc }) {
       let p = await core.plan(dir, m); say('plan', p.downloads.length, 'archivos', (p.bytes / 1048576).toFixed(1), 'MB');
       await core.apply(dir, p, () => {});
       p = await core.plan(dir, m); if (!core.upToDate(p)) throw new Error('tras descargar no está al día');
+    });
+    await step('caída en directo', async () => {
+      await js("window.transPrepare().then(()=>{document.getElementById('trans').classList.remove('hide');document.getElementById('trans').style.opacity=1;window.transFrame(2.6)})"); await wait(2500); await shot('7b_caida_2.6');
+      await js("window.transFrame(5.4)"); await wait(800); await shot('7c_caida_final');
+      say('caída: ms por fotograma', await js("(()=>{const t0=performance.now();for(let i=0;i<30;i++)window.transFrame(1+i*.1);return ((performance.now()-t0)/30).toFixed(1)})()"));
+      await js("document.getElementById('trans').classList.add('hide')");
     });
     await step('comprobar desde la interfaz', async () => { await js('window.__ui.check()'); await wait(4000); say('estado:', await js('window.__ui.status()')); await shot('8_comprobado'); });
   } catch (e) { ok = false; say('FALLO GENERAL', e && e.stack || e); }
