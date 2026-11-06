@@ -97,12 +97,13 @@ function setupUpdater() {
 
 // ---------- Lo que pide la interfaz ----------
 const fmtMB = b => (b / 1048576).toFixed(1).replace('.', ',') + ' MB';
+const DEFAULT_VOLUME = 0.3;   // volumen general (intro + música) si el jugador no lo ha cambiado
 const handlers = {
   async init() {
     return {
       version: app.getVersion(), pack: core.PACK_NAME, target: publicTarget(),
       introAlways: settings.introAlways === 'true', introSeen: settings.introSeenVersion === app.getVersion(),
-      musicMuted: settings.musicMuted === 'true', volume: settings.volume != null ? Number(settings.volume) : 1,
+      musicMuted: settings.musicMuted === 'true', volume: settings.volume != null ? Number(settings.volume) : DEFAULT_VOLUME,
       firstTime: !settings.targetKind,
       apps: { modrinth: await core.modrinthInstalled(), prism: await core.prismInstalled(), official: await core.officialInstalled() },
       updateReady,
@@ -214,6 +215,16 @@ const handlers = {
     if (res) return { info: res + `\n\nPuedes jugar igualmente: crea un perfil de NeoForge en tu launcher con esta carpeta de juego:\n${t.dir}` };
     return { status: (await core.openOfficialLauncher()) ? `Abriendo Minecraft… elige el perfil "${core.PACK_NAME}" y dale a Jugar.`
       : `Perfil "${core.PACK_NAME}" listo. Abre el launcher de Minecraft y elígelo.` };
+  },
+  /** Desinstalar: abre el desinstalador del launcher (el modpack y las instancias de Modrinth/Prism no se tocan). */
+  async uninstall() {
+    if (!app.isPackaged) return { error: 'Esto solo funciona con el launcher instalado.' };
+    const dir = path.dirname(process.execPath);
+    const f = (await fsp.readdir(dir)).find(n => /^Uninstall .*\.exe$/i.test(n));
+    if (!f) return { error: 'No se encontró el desinstalador. Puedes quitarlo desde Configuración de Windows → Aplicaciones.' };
+    require('child_process').spawn(path.join(dir, f), [], { detached: true, stdio: 'ignore' }).unref();
+    setTimeout(() => app.quit(), 300);
+    return { ok: true };
   },
   minimize() { win.minimize(); },
   close() { win.close(); },

@@ -147,7 +147,7 @@
 
   // ---------- música del menú (bucle sin cortes) ----------
   const MUSIC = 'media/musica_menu_bucle.ogg', MUSIC_AT = 52.6;
-  let actx, gain, musicVol = 1, muted = false;
+  let actx, gain, musicVol = 0.3, muted = false;
   async function startMusic(fadeIn) {
     try {
       actx = actx || new AudioContext();
@@ -168,12 +168,21 @@
     const p = document.createElement('div'); p.className = 'pop';
     p.innerHTML = `<label><input type="checkbox" id="pintro"> Ver la intro cada vez que abro el launcher</label>
       <label>Volumen <input type="range" id="pvol" min="0" max="1" step="0.05" style="width:200px;height:auto"></label>
-      <a id="preplay">Ver la intro ahora</a>`;
+      <a id="preplay">Ver la intro ahora</a>
+      <a id="puninst" style="color:#ff9aa8">Desinstalar el launcher…</a>`;
     document.body.appendChild(p);
     const ci = p.querySelector('#pintro'), pv = p.querySelector('#pvol');
     ci.checked = !!info.introAlways; pv.value = musicVol;
     ci.onchange = () => { info.introAlways = ci.checked; L.setPref('introAlways', ci.checked); };
     pv.oninput = () => { musicVol = +pv.value; L.setPref('volume', musicVol); applyVolume(); };
+    p.querySelector('#puninst').onclick = async () => {
+      closeMenus();
+      const ok = await dialog('Desinstalar el launcher', 'Se quitará el launcher de este PC.\n\nEl modpack y tus mundos no se borran: siguen en tu instancia (Modrinth, Prism o el launcher oficial).',
+        [{ label: 'Cancelar', value: false }, { label: 'Desinstalar', value: true, main: true }]);
+      if (!ok) return;
+      const r = await L.uninstall();
+      if (r && r.error) alertBox('Desinstalar', r.error);
+    };
     p.querySelector('#preplay').onclick = () => { closeMenus(); sessionStorage.setItem('forceIntro', '1'); location.reload(); };
   };
 
@@ -242,7 +251,7 @@
     info = await L.init();
     $('ver').textContent = 'launcher ' + info.version;
     setTargetLabel(info.target);
-    muted = !!info.musicMuted; musicVol = isFinite(info.volume) ? info.volume : 1; applyVolume();
+    muted = !!info.musicMuted; musicVol = isFinite(info.volume) ? info.volume : 0.3; applyVolume();
     btn(bCheck, false);
     const force = sessionStorage.getItem('forceIntro'); sessionStorage.removeItem('forceIntro');
     const sel = new URLSearchParams(location.search).get('selftest');

@@ -36,6 +36,12 @@ jobs:
         working-directory: app
         shell: bash
         run: npx electron-builder --win nsis --publish never && ls -la dist
+      - name: Instalar de verdad (en silencio) y ver qué queda instalado
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem app/dist/*.exe | Select-Object -First 1
+          Start-Process $exe.FullName -ArgumentList '/S' -Wait
+          Get-ChildItem "$env:LOCALAPPDATA\Programs" -Directory | ForEach-Object { Write-Output "== $($_.FullName)"; Get-ChildItem $_.FullName -File | Select-Object -ExpandProperty Name }
       - name: Guardar el instalador de prueba
         uses: actions/upload-artifact@v4
         with:
