@@ -166,7 +166,7 @@
   $('bprefs').onclick = () => {
     if (document.querySelector('.pop')) { closeMenus(); return; }
     const p = document.createElement('div'); p.className = 'pop';
-    p.innerHTML = `<label><input type="checkbox" id="pintro"> Ver la intro cada vez que abro el launcher</label>
+    p.innerHTML = `<label><input type="checkbox" id="pintro"> Ver la intro entera cada vez que abro el launcher</label>
       <label>Volumen <input type="range" id="pvol" min="0" max="1" step="0.05" style="width:200px;height:auto"></label>
       <a id="preplay">Ver la intro ahora</a>
       <a id="puninst" style="color:#ff9aa8">Desinstalar el launcher…</a>`;
@@ -206,17 +206,27 @@
   // la intro se carga entera en memoria (9 MB del disco): así el vídeo nunca se queda esperando datos
   let introBlob = null;
   async function introUrl() { if (!introBlob) introBlob = URL.createObjectURL(await (await fetch(INTRO)).blob()); return introBlob; }
-  async function playIntro() {
+  // short = solo desde que cae la estrella, un poco más rápido (cada vez que se abre, salvo la intro entera)
+  const FALL_AT = 50.0, FALL_SPEED = 1.4;
+  async function playIntro(short) {
     const intro = $('intro'), v = $('introv');
-    intro.classList.remove('hide'); $('fade').style.opacity = 0;
+    intro.classList.remove('hide');
     try { v.src = await introUrl(); } catch { reveal(true); return; }
+    if (short) {
+      v.style.opacity = 0;   // entra desde negro
+      await new Promise(r => { v.onloadedmetadata = r; if (v.readyState >= 1) r(); });
+      v.currentTime = FALL_AT; v.playbackRate = FALL_SPEED;
+      await new Promise(r => { v.onseeked = r; setTimeout(r, 1500); });
+      requestAnimationFrame(() => { v.style.opacity = 1; });
+    }
+    $('fade').style.opacity = 0;
     v.volume = muted ? 0 : musicVol;
     v.onended = () => reveal(false);
     v.onerror = () => reveal(true);
     v.play().catch(() => reveal(true));
     intro.onclick = () => reveal(true);
     addEventListener('keydown', e => { if (e.key === 'Escape' && !revealed) reveal(true); });
-    L.setPref('introSeenVersion', info.version);
+    if (!short) L.setPref('introSeenVersion', info.version);
   }
   async function afterReveal() {
     await new Promise(r => setTimeout(r, 600));
@@ -255,7 +265,9 @@
     btn(bCheck, false);
     const force = sessionStorage.getItem('forceIntro'); sessionStorage.removeItem('forceIntro');
     const sel = new URLSearchParams(location.search).get('selftest');
-    if (!sel && (force || info.introAlways || !info.introSeen)) playIntro(); else reveal(true);
+    if (sel) reveal(true);
+    else if (force || info.introAlways || !info.introSeen) playIntro(false);
+    else playIntro(true);
   })();
 
   // ganchos para la prueba automática (solo con --selftest)
