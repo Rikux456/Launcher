@@ -23,6 +23,8 @@ module.exports = async function selftest(win, { core, ipc }) {
     await new Promise(r => win.webContents.once('did-finish-load', r));
     win.setSize(1880, 1040); win.center();
     await wait(8000);
+    // el PC de pruebas no tiene launcher de Minecraft: fuera el aviso de primera vez para las capturas
+    await shot('0_primera_vez'); await js("document.querySelectorAll('.modal').forEach(m=>m.remove())"); await wait(500);
     await step('interfaz', async () => { await shot('1_launcher'); say('estado:', await js('window.__ui.status()')); });
     await step('rey agujero negro', async () => { await js('window.REY_M=1'); await wait(2500); await shot('2_rey_agujero'); await js('window.REY_M=0.6'); await wait(2500); await shot('3_rey_cambio'); await js('window.REY_M=null'); });
     await step('menu se abre con', async () => { await js("document.getElementById('open').click()"); await wait(1500); await shot('4_menu'); await js("document.querySelector('.menu')&&document.querySelector('.menu').remove()"); });

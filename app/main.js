@@ -10,6 +10,8 @@ const SELFTEST = process.argv.includes('--selftest');
 const RENDERER = path.join(__dirname, 'renderer');
 const W = 1880, H = 1040;   // tamaño de diseño de la interfaz (se escala a la ventana)
 
+// en PCs sin tarjeta gráfica compatible, que el fondo WebGL siga funcionando con el modo por software
+app.commandLine.appendSwitch('enable-unsafe-swiftshader');
 protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } }]);
 if (!SELFTEST && !app.requestSingleInstanceLock()) app.quit();
 
