@@ -6,20 +6,21 @@
 (function () {
   const cv = document.getElementById('rey');
   const ctx = cv.getContext('2d');
-  const K = .85, CX = 945, BY = 831, TOP = 580, LX = 945, LY = BY - (BY - 660) * K, SX = 945, SY = 592;
+  // rey nuevo de Rikux456 (2026-11-06): a tamaño entero (K = 1), estrella dentro de la corona y luz propia en mesa y fondo
+  const K = 1, CX = 945, BY = 835, TOP = 577, LX = 945, LY = 672, SX = 945, SY = 614;
   const STAR = 20, CHANGE = 3;                      // segundos en cada estado y en cada cambio (propuesta, no decidido)
   const cl = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v)), ss = (a, b, v) => { const t = cl((v - a) / (b - a)); return t * t * (3 - 2 * t); };
   const pool = {};
   const mk = key => { let c = pool[key]; if (!c) { c = pool[key] = document.createElement('canvas'); c.width = 1880; c.height = 1040; }
     const g = c.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.filter = 'none'; g.clearRect(0, 0, 1880, 1040); return c; };
-  let TT = 0, x = null;
+  let TT = 0, x = null, LUZ = null;
   function rgbConic(c, cx, cy, a = 1, l = 80) { const g = c.createConicGradient(TT * .35, cx, cy); for (let i = 0; i <= 12; i++) g.addColorStop(i / 12, `hsla(${i * 30 + 200},100%,${l}%,${a})`); return g; }
   function glow(t) {
     const br = 1 + .07 * Math.sin(TT * 1.25) + .035 * Math.sin(TT * 2.7 + 1);   // respiración del brillo
     x.save(); x.globalCompositeOperation = 'lighter'; x.globalAlpha = .88 + .12 * Math.sin(TT * 1.25); const s = 2.6, Rr = 170 * s * br; const o = mk('glow'), g2 = o.getContext('2d');
     let g = g2.createRadialGradient(LX, LY, 0, LX, LY, Rr); g.addColorStop(0, 'rgba(140,190,255,.85)'); g.addColorStop(.12, 'rgba(80,140,255,.5)'); g.addColorStop(.4, 'rgba(40,90,230,.18)'); g.addColorStop(1, 'rgba(20,50,200,0)');
     if (t) { g2.fillStyle = rgbConic(g2, LX, LY, 1, 82); g2.fillRect(0, 0, 1880, 1040); const m = g2.createRadialGradient(LX, LY, 0, LX, LY, Rr); m.addColorStop(0, 'rgba(0,0,0,.9)'); m.addColorStop(.12, 'rgba(0,0,0,.5)'); m.addColorStop(.4, 'rgba(0,0,0,.16)'); m.addColorStop(1, 'rgba(0,0,0,0)'); g2.globalCompositeOperation = 'destination-in'; g2.fillStyle = m; g2.fillRect(0, 0, 1880, 1040); }
-    else { g2.fillStyle = g; g2.fillRect(0, 0, 1880, 1040); }
+    else { g2.globalAlpha = Math.min(1, .82 + .18 * Math.sin(TT * 1.25)) * br; g2.drawImage(LUZ, 0, 0); g2.globalAlpha = 1; }   // la luz que pintó Rikux456 en la mesa y el fondo
     x.drawImage(o, 0, 0);
     const sw = .015 * Math.sin(TT * .3), spin = TT * .12;   // vaivén de la cruz y giro lento de los diagonales
     for (const [ang0, L0, w, k] of [[0, 190, 4, 0], [Math.PI / 2, 140, 4, 1], [Math.PI / 4, 55, 2.5, 2], [-Math.PI / 4, 55, 2.5, 3]]) {
@@ -47,7 +48,7 @@
   const blueStar = a => `rgba(120,175,255,${a})`;
   // un estado entero (brillo + pieza) en el lienzo c; part = 'glow' | 'piece' | undefined (los dos)
   function state(c, hole, IMG, part, nostar) {
-    const [WH, AL, BO] = IMG; const X = x; x = c;
+    const [WH, AL, BO] = IMG; LUZ = IMG[3]; const X = x; x = c;
     if (part != 'piece') glow(hole);
     if (part != 'glow') {
       x.save(); x.setTransform(x.getTransform().multiply(new DOMMatrix([K, 0, 0, K, CX * (1 - K), BY * (1 - K)])));
@@ -72,7 +73,7 @@
 
   let IMG = null, start = null, lastDraw = 0, lastM = -1;
   const load = s => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = s; });
-  Promise.all(['rey_blanco.png', 'rey_alfa.png', 'rey_borde.png'].map(load)).then(a => { IMG = a; });
+  Promise.all(['rey_blanco.png', 'rey_alfa.png', 'rey_borde.png', 'rey_luz.png'].map(load)).then(a => { IMG = a; });
 
   /** Fase del ciclo: 0 = estrella, 1 = agujero negro. Empieza en estrella cuando se revela el launcher. */
   function phase(t) {

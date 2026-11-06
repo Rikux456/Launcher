@@ -198,13 +198,17 @@
   };
 
   // ---------- intro ----------
-  const INTRO = 'media/intro_launcher.webm';
+  const INTRO = 'media/intro_launcher.mp4';
   function reveal(skipped) {
     if (revealed) return; revealed = true;
     window.sceneStart && window.sceneStart(); window.reyStart && window.reyStart();
-    startMusic(skipped);
     const intro = $('intro'), fade = $('fade');
-    if (!intro.classList.contains('hide')) {
+    if (liveTail) {   // la intro entera sigue sonando por debajo; la música del menú entra cuando acaba
+      const v = $('introv');
+      if (skipped || v.ended) { v.pause(); intro.classList.add('hide'); startMusic(skipped, skipped ? MUSIC_AT : VIDEO_END - MUSIC_LAG); }
+      else v.onended = () => { intro.classList.add('hide'); startMusic(false, VIDEO_END - MUSIC_LAG); };
+    } else startMusic(skipped);
+    if (!liveTail && !intro.classList.contains('hide')) {
       const v = $('introv');
       if (skipped) {   // fundido a negro de 0,4 s y luego el launcher
         v.style.opacity = 0;
@@ -219,10 +223,55 @@
   async function introUrl() { if (!introBlob) introBlob = URL.createObjectURL(await (await fetch(INTRO)).blob()); return introBlob; }
   // short = solo desde que cae la estrella, un poco más rápido (cada vez que se abre, salvo la intro entera)
   // en la versión corta el vídeo va sin sonido: la música sigue a su velocidad (desde donde va la canción en ese
-  // punto: el ogg va 3,025 s por detrás del vídeo) y los efectos de la caída van aparte, rápidos pero sin cambiar el tono
-  const FALL_AT = 50.0, FALL_SPEED = 1.4, MUSIC_LAG = 55.625 - MUSIC_AT, SFX_AT = 50.208;
+  // punto: el ogg va 3,005 s por detrás del vídeo) y los efectos de la caída van aparte, rápidos pero sin cambiar el tono
+  // (intro de Rikux456 del 2026-11-06: 54,0 s; la estrella empieza a caer en el fotograma 1166 = 48,583 s)
+  const VIDEO_END = 54.0, SFX_AT = 48.583, FALL_AT = SFX_AT - .208, FALL_SPEED = 1.4, MUSIC_LAG = 3.005;
+  let liveTail = false;   // intro entera: desde la caída se dibuja en directo y el vídeo solo sigue sonando
   let sfx = null;
+  // la versión corta ya no es el vídeo: la caída se dibuja en directo a la resolución del launcher (transicion.js)
+  // y al final aparece la interfaz de verdad. Si la tarjeta gráfica no puede, se usa el vídeo como antes.
+  async function playFall() {
+    try { await window.transPrepare(); } catch { return false; }
+    document.body.classList.add('uihid');
+    startMusic(true, SFX_AT - MUSIC_LAG);
+    sfx = new Audio('sfx_transicion.ogg'); sfx.preservesPitch = true; sfx.playbackRate = FALL_SPEED; sfx.volume = muted ? 0 : musicVol * .85;
+    sfx.play().catch(() => {});
+    $('fade').style.opacity = 0;
+    const onUi = () => {
+      reveal(false);
+      document.body.classList.add('uifade');
+      requestAnimationFrame(() => document.body.classList.remove('uihid'));
+      setTimeout(() => document.body.classList.remove('uifade'), 1200);
+    };
+    window.transPlay(FALL_SPEED, onUi, () => {});
+    const skip = () => { if (!revealed) window.transSkip(); };
+    addEventListener('keydown', e => { if (e.key === 'Escape') skip(); });
+    addEventListener('mousedown', skip, { once: true });
+    return true;
+  }
+  // intro entera: cuando la estrella empieza a caer se pasa a la caída en directo (rey nuevo, a la resolución del
+  // launcher) en el mismo punto; el vídeo se queda debajo, invisible, para que siga sonando
+  function liveFall(v) {
+    let ok = false; window.transPrepare().then(() => { ok = true; }, () => {});
+    const watch = (now, meta) => {
+      if (revealed) return;
+      const t = meta ? meta.mediaTime : v.currentTime;
+      if (ok && t >= SFX_AT - .02 && t < SFX_AT + 1) {
+        liveTail = true; document.body.classList.add('uihid');
+        window.transPlay(1, () => {
+          reveal(false); document.body.classList.add('uifade');
+          requestAnimationFrame(() => document.body.classList.remove('uihid'));
+          setTimeout(() => document.body.classList.remove('uifade'), 1200);
+        }, () => {}, Math.max(0, t - SFX_AT));
+        requestAnimationFrame(() => { const i = $('intro'); i.style.transition = 'none'; i.style.opacity = 0; i.style.pointerEvents = 'none'; });
+        return;
+      }
+      if (t < SFX_AT + 1) v.requestVideoFrameCallback ? v.requestVideoFrameCallback(watch) : requestAnimationFrame(() => watch());
+    };
+    v.requestVideoFrameCallback ? v.requestVideoFrameCallback(watch) : requestAnimationFrame(() => watch());
+  }
   async function playIntro(short) {
+    if (short && await playFall()) return;
     const intro = $('intro'), v = $('introv');
     intro.classList.remove('hide');
     try { v.src = await introUrl(); } catch { reveal(true); return; }
@@ -241,8 +290,10 @@
     v.onended = () => reveal(false);
     v.onerror = () => reveal(true);
     v.play().catch(() => reveal(true));
-    intro.onclick = () => reveal(true);
-    addEventListener('keydown', e => { if (e.key === 'Escape' && !revealed) reveal(true); });
+    const skipAll = () => { if (liveTail) { window.transSkip(); reveal(true); } else reveal(true); };
+    intro.onclick = skipAll;
+    addEventListener('keydown', e => { if (e.key === 'Escape' && !revealed) skipAll(); });
+    if (!short) liveFall(v);
     if (!short) L.setPref('introSeenVersion', info.version);
   }
   async function afterReveal() {
@@ -297,6 +348,7 @@
   // ---------- arranque ----------
   (async () => {
     loadMusic().catch(() => {});
+    if (!new URLSearchParams(location.search).get('selftest')) window.transPrepare && window.transPrepare().catch(() => {});
     info = await L.init();
     $('ver').textContent = 'launcher ' + info.version;
     setTargetLabel(info.target);

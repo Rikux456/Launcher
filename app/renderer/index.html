@@ -116,12 +116,16 @@ body{transform-origin:0 0}
 .b1,.b2{top:742px;height:auto;width:auto;border:0;background:none!important;box-shadow:none;font-size:20px;color:#9aa6d6;padding:0}
 .b1{left:100px}.b2{left:270px}.b1:hover,.b2:hover{color:#fff;background:none}.b1.off{color:#3d4570}
 #fade{position:absolute;inset:0;z-index:59;background:#000;pointer-events:none;transition:opacity .8s}
+#trans{position:absolute;left:0;top:0;width:1880px;height:1040px;transition:opacity .4s;pointer-events:none}
+body.uihid :is(.title,.sub,.open,.news,.status,.bar,.barbg,.btn,.games,.tools,.ver,.banner){opacity:0!important;pointer-events:none!important}
+body.uifade :is(.title,.sub,.open,.news,.status,.bar,.barbg,.btn,.games,.tools,.ver,.banner){transition:opacity 1s ease!important}
 .hide{display:none!important}
 </style></head><body>
 <div class="scene"><img src="bg_clean.jpg" data-d="10"><canvas id="sky" width="1672" height="941" data-d="14"></canvas><canvas id="halo" width="1672" height="941" data-d="22"></canvas><canvas id="clock" width="1672" height="941" data-d="22"></canvas><canvas id="silc" width="1672" height="941" data-d="34"></canvas><canvas id="neb" width="1672" height="941" style="mix-blend-mode:screen" data-d="34"></canvas><canvas id="rey" width="1880" height="1058" data-d="34"></canvas></div>
 <div class="veil" style="left:880px;top:110px;width:920px;height:540px;background:radial-gradient(ellipse at center,rgba(6,10,34,.55) 40%,transparent 75%)"></div>
 <div class="veil" style="left:30px;top:250px;width:760px;height:160px;background:radial-gradient(ellipse at 40% 50%,rgba(6,10,34,.75) 35%,transparent 72%)"></div>
 <div class="veil" style="left:40px;top:760px;width:700px;height:90px;background:radial-gradient(ellipse at 40% 50%,rgba(6,10,34,.7) 35%,transparent 72%)"></div>
+<canvas id="trans" width="1880" height="1040" class="hide"></canvas>
 <div class="drag"></div>
 <div class="wctl"><button id="wmin" title="Minimizar">–</button><button id="wclose" class="x" title="Cerrar">✕</button></div>
 <div class="title">Der<span class="i">ı<span class="star"><span class="core"></span><span class="sm"></span></span></span>so</div>
@@ -181,5 +185,6 @@ function f(n){const t=st==null?0:(n-st)/1000; cx+=(mx-cx)*.05; cy+=(my-cy)*.05;
   else tr+=` scale(${1.045+d*.0004})`;
   el.style.transform=tr;}
  requestAnimationFrame(f);} requestAnimationFrame(f);})();</script>
+<script src="transicion.js"></script>
 <script src="ui.js"></script>
 </body></html>
