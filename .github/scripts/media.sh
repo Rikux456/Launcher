@@ -21,7 +21,7 @@ gh api "repos/$GITHUB_REPOSITORY/releases/$id" --jq '.body // ""' | grep -oE '\[
   curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -o "$DEST/$name" "$url" || curl -fsSL -o "$DEST/$name" "$url"
 done
 # los .zip se descomprimen (GitHub a veces no deja subir .ogg sueltos)
-for z in "$DEST"/*.zip; do [[ -e "$z" ]] || continue; echo "descomprimiendo $(basename "$z")"; tar -xf "$z" -C "$DEST" && rm -f "$z"; done
+for z in "$DEST"/*.zip; do [[ -e "$z" ]] || continue; echo "descomprimiendo $(basename "$z")"; (python3 -m zipfile -e "$z" "$DEST" 2>/dev/null || python -m zipfile -e "$z" "$DEST") && rm -f "$z"; done
 # por si el zip trae una carpeta dentro
 find "$DEST" -mindepth 2 -type f \( -name '*.ogg' -o -name '*.webm' \) -exec mv -f {} "$DEST"/ \; 2>/dev/null || true
 for f in intro_launcher.webm musica_menu_bucle.ogg; do

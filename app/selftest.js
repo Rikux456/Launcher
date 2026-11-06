@@ -32,11 +32,13 @@ module.exports = async function selftest(win, { core, ipc }) {
     await step('archivos de la intro', async () => { const d = path.join(__dirname, 'renderer', 'media'); for (const f of await fsp.readdir(d)) say('  media:', f, (await fsp.stat(path.join(d, f))).size); });
     await step('intro', async () => {
       await js("{document.getElementById('intro').classList.remove('hide');document.getElementById('intro').style.opacity=1;const v=document.getElementById('introv');v.style.opacity=1;v.src='media/intro_launcher.webm';v.play().then(()=>{v.currentTime=20})}");
-      await wait(3000); await shot('6_intro'); say('intro reproduciendo:', await js("!document.getElementById('introv').paused && document.getElementById('introv').currentTime"));
+      await wait(3000); await shot('6_intro');
+      const lum = await js("{const v=document.getElementById('introv');const c=document.createElement('canvas');c.width=160;c.height=90;const g=c.getContext('2d');g.drawImage(v,0,0,160,90);const d=g.getImageData(0,0,160,90).data;let s=0;for(let i=0;i<d.length;i+=4)s+=(d[i]+d[i+1]+d[i+2])/3;s/(d.length/4)}");
+      say('brillo del fotograma dibujado en la página:', Math.round(lum)); if (!(lum > 3)) throw new Error('el vídeo no se ve (fotograma negro)'); say('intro reproduciendo:', await js("!document.getElementById('introv').paused && document.getElementById('introv').currentTime"));
       await js("{const v=document.getElementById('introv');v.currentTime=55.3;}"); await wait(1500); await shot('7_intro_final');
       say('salto al final:', await js("document.getElementById('introv').currentTime")); await js("{const v=document.getElementById('introv');v.pause();document.getElementById('intro').classList.add('hide')}");
     });
-    await step('musica', async () => { say('musica decodificada (s):', await js("fetch('media/musica_menu_bucle.ogg').then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer()}).then(b=>new AudioContext().decodeAudioData(b)).then(a=>a.duration).catch(e=>'ERROR '+e.message)")); });
+    await step('musica', async () => { const d = await js("fetch('media/musica_menu_bucle.ogg').then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer()}).then(b=>new AudioContext().decodeAudioData(b)).then(a=>a.duration).catch(e=>'ERROR '+e.message)"); say('musica decodificada (s):', d); if (typeof d !== 'number') throw new Error(String(d)); });
     await step('node:sqlite', async () => { const { DatabaseSync } = require('node:sqlite'); const d = new DatabaseSync(':memory:'); say('sqlite', d.prepare('select sqlite_version() v').get().v); d.close(); });
     await step('mrpack', async () => { say(await core.buildMrpack({ version: 't', minecraft: '1.21.1', neoforge: '21.1.262' })); });
     await step('modpack real (comprobar + descargar + volver a comprobar)', async () => {
