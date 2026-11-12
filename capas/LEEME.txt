@@ -1,0 +1,2 @@
+Capas LoRA del chat del cristal (Derisomod - NPCs). No van en el modpack: el mod las baja solo desde aquí (lora_url).
+ylvia-v4c.gguf = v4c, para Qwen2.5-7B-Instruct (12-nov-2026).
