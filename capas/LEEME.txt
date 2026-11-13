@@ -1,2 +1,5 @@
 Capas LoRA del chat del cristal (Derisomod - NPCs). No van en el modpack: el mod las baja solo desde aquí (lora_url).
 ylvia-v4c.gguf = v4c, para Qwen2.5-7B-Instruct (12-nov-2026).
+
+ylvia-v5b.gguf (13-nov-2026): capa para Qwen3.5-9B (NPCs 0.9.34 en adelante). Entrenada con el lore de Obsidian
+  (75 preguntas de lore + todo lo de la v4c). La v4c es para Qwen2.5-7B (NPCs 0.9.32-0.9.33).
